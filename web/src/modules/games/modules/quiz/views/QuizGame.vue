@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen p-6 bg-base-200">
-    <div class="mx-auto max-w-2xl mb-52 lg:mb-auto">
+    <div class="mx-auto max-w-2xl mb-52 lg:mb-auto mt-10">
       <div class="mb-6 flex justify-between items-center">
         <LevelIndicator />
         <CoinDisplay />
