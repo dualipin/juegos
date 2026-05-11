@@ -104,6 +104,12 @@
       </ul>
     </div>
   </div>
+
+  <ul>
+    <li v-for="image in images" :key="image">
+      <img :src="image" :alt="`Imagen ${image.split('/').pop()}`" class="w-32 h-32 object-contain rounded-lg" />
+    </li>
+  </ul>
 </template>
 
 
@@ -117,6 +123,12 @@ import { useAuthStore } from '@/modules/auth/stores/auth-store'
 import { roomServices } from '../services/room-services'
 
 const auth = useAuthStore()
+
+
+const basePathImages = '/src/modules/games/modules/lottery/assets/img'
+
+
+const images = Array.from({ length: 20 }, (_, i) => `${basePathImages}/${i + 1}.jpeg`)
 
 const playerName = ref('')
 const roomCode = ref('')
