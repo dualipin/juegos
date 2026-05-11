@@ -39,8 +39,11 @@ export async function crearSala(req, res) {
       playerId,
       playerName,
       isHost: true,
+      creatorId: room.creatorId,
       card: player?.board || [],
-      players: room.players.map((p) => ({ id: p.id, name: p.name })),
+      players: room.players
+        .filter((p) => p.connected)
+        .map((p) => ({ id: p.id, name: p.name })),
       drawnCards: room.drawnCards || [],
       gameStarted: room.gameStarted,
     })
@@ -66,8 +69,11 @@ export async function unirseSala(req, res) {
       playerId,
       playerName,
       isHost: room.creatorId === playerId,
+      creatorId: room.creatorId,
       card: player?.board || [],
-      players: room.players.map((p) => ({ id: p.id, name: p.name })),
+      players: room.players
+        .filter((p) => p.connected)
+        .map((p) => ({ id: p.id, name: p.name })),
       drawnCards: room.drawnCards || [],
       gameStarted: room.gameStarted,
     })
@@ -84,7 +90,10 @@ export async function obtenerSala(req, res) {
 
     res.json({
       code: room.code,
-      players: room.players.map((p) => ({ id: p.id, name: p.name })),
+      creatorId: room.creatorId,
+      players: room.players
+        .filter((p) => p.connected)
+        .map((p) => ({ id: p.id, name: p.name })),
       drawnCards: room.drawnCards,
       gameStarted: room.gameStarted,
       winner: room.winner,

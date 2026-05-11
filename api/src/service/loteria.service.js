@@ -117,7 +117,7 @@ class LoteriaService {
 
       this.touchRoom(roomCode)
 
-      return room
+      return this.getRoom(roomCode)
     }
 
     // Verificar si el jugador ya existe
@@ -126,8 +126,8 @@ class LoteriaService {
       .get(playerId, roomCode)
 
     if (existingPlayer) {
-      this.touchRoom(roomCode)
-      return room
+      this.markPlayerConnected(playerId, roomCode)
+      return this.getRoom(roomCode)
     }
 
     const deck = parseCardList(room.deck)
@@ -169,7 +169,7 @@ class LoteriaService {
 
     // Obtener jugadores
     const players = this.db
-      .prepare('SELECT id, name, board FROM players WHERE room_code = ?')
+      .prepare('SELECT id, name, board, connected FROM players WHERE room_code = ?')
       .all(roomCode)
 
     // Obtener cartas lanzadas
@@ -186,6 +186,7 @@ class LoteriaService {
         id: p.id,
         name: p.name,
         board: parseCardList(p.board),
+        connected: p.connected === 1,
       })),
       deck: parseCardList(room.deck),
       drawnCards,

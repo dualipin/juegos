@@ -10,6 +10,7 @@ export interface LotteryState {
   roomCode: string
   playerId: string
   playerName: string
+  creatorId: string
   isHost: boolean
   card: string[]
   drawnElements: string[]
@@ -23,6 +24,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
   const roomCode = ref('')
   const playerId = ref('')
   const playerName = ref('')
+  const creatorId = ref('')
   const isHost = ref(false)
   const card = ref<string[]>([])
   const drawnElements = ref<string[]>([])
@@ -38,7 +40,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     players.value.map((p) => ({
       ...p,
       isCurrentPlayer: p.id === playerId.value,
-      isHost: p.id === players.value[0]?.id || (isHost.value && p.id === playerId.value),
+      isHost: p.id === creatorId.value,
     }))
   )
 
@@ -46,6 +48,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     roomCode: string
     playerId: string
     playerName: string
+    creatorId?: string
     isHost: boolean
     card: string[]
     players?: Player[]
@@ -54,6 +57,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     roomCode.value = data.roomCode
     playerId.value = data.playerId
     playerName.value = data.playerName
+    creatorId.value = data.creatorId || ''
     isHost.value = data.isHost
     card.value = data.card || []
     players.value = data.players || [{ id: data.playerId, name: data.playerName }]
@@ -85,6 +89,14 @@ export const useGameStore = defineStore('lotteryGame', () => {
     connected.value = state
   }
 
+  function setCreatorId(id: string) {
+    creatorId.value = id
+  }
+
+  function setIsHost(state: boolean) {
+    isHost.value = state
+  }
+
   function setGameStarted(state: boolean) {
     gameStarted.value = state
   }
@@ -93,6 +105,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     roomCode.value = ''
     playerId.value = ''
     playerName.value = ''
+    creatorId.value = ''
     isHost.value = false
     card.value = []
     drawnElements.value = []
@@ -107,6 +120,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     roomCode,
     playerId,
     playerName,
+    creatorId,
     isHost,
     card,
     drawnElements,
@@ -124,6 +138,8 @@ export const useGameStore = defineStore('lotteryGame', () => {
     setWinner,
     updatePlayers,
     setConnected,
+    setCreatorId,
+    setIsHost,
     setGameStarted,
     resetGame,
   }

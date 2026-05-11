@@ -68,6 +68,10 @@ wss.on('connection', (ws, req) => {
     }
 
     loteriaService.markPlayerConnected(playerId, roomCode)
+    const updatedRoom = loteriaService.getRoom(roomCode)
+    const connectedPlayers = updatedRoom.players
+      .filter((p) => p.connected)
+      .map((p) => ({ id: p.id, name: p.name }))
 
     // Enviar estado actual al cliente que se conecta
     ws.send(
@@ -75,10 +79,11 @@ wss.on('connection', (ws, req) => {
         type: 'connected',
         roomCode,
         playerId,
-        players: room.players.map((p) => ({ id: p.id, name: p.name })),
-        drawnCards: room.drawnCards,
-        gameStarted: room.gameStarted,
-        winner: room.winner,
+        creatorId: updatedRoom.creatorId,
+        players: connectedPlayers,
+        drawnCards: updatedRoom.drawnCards,
+        gameStarted: updatedRoom.gameStarted,
+        winner: updatedRoom.winner,
       })
     )
 
@@ -87,7 +92,8 @@ wss.on('connection', (ws, req) => {
       type: 'playerConnected',
       playerId,
       playerName: player.name,
-      players: room.players.map((p) => ({ id: p.id, name: p.name })),
+      creatorId: updatedRoom.creatorId,
+      players: connectedPlayers,
     })
   } catch (error) {
     console.error('Error on connection:', error.message)
@@ -119,10 +125,14 @@ wss.on('connection', (ws, req) => {
     try {
       loteriaService.removePlayer(playerId, roomCode)
       const room = loteriaService.getRoom(roomCode)
+      const connectedPlayers = room.players
+        .filter((p) => p.connected)
+        .map((p) => ({ id: p.id, name: p.name }))
       broadcastToRoom(roomCode, null, {
         type: 'playerDisconnected',
         playerId,
-        players: room.players.map((p) => ({ id: p.id, name: p.name })),
+        creatorId: room.creatorId,
+        players: connectedPlayers,
       })
     } catch (error) {
       console.error('Error on disconnect:', error)

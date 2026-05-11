@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 p-6">
+  <div class="min-h-screen p-6 pt-20">
     <!-- Encabezado -->
-    <header class="mb-8">
+    <header class="mb-10">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 class="font-display text-4xl font-black text-error">LOTERÍA</h1>
@@ -70,7 +70,7 @@
               <div
                 v-for="card in store.drawnElements"
                 :key="card"
-                class="flex items-center justify-center aspect-square overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
+                class="flex items-center justify-center aspect-3/5 overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
               >
                 <img
                   :src="cardImage(card)"
@@ -95,7 +95,7 @@
                 v-for="card in store.card"
                 :key="card"
                 :class="[
-                  'flex items-center justify-center aspect-square overflow-hidden rounded transition-all duration-300',
+                  'flex items-center justify-center aspect-3/5 overflow-hidden rounded transition-all duration-300 relative',
                   store.drawnElements.includes(card)
                     ? 'bg-success text-white shadow-lg scale-110'
                     : 'bg-base-200 text-base-content border-2 border-base-300',
@@ -107,6 +107,13 @@
                   class="h-full w-full object-cover"
                   loading="lazy"
                 />
+                <!-- Frijolito cuando la carta está marcada -->
+                <div
+                  v-if="store.drawnElements.includes(card)"
+                  class="absolute inset-0 flex items-center justify-center text-4xl"
+                >
+                  🫘
+                </div>
               </div>
             </div>
             <div
@@ -213,6 +220,10 @@ function handleWebSocketMessage(data: any) {
   switch (data.type) {
     case 'connected': {
       store.setConnected(true)
+      if (data.creatorId) {
+        store.setCreatorId(data.creatorId)
+        store.setIsHost(data.creatorId === store.playerId)
+      }
       if (data.players) {
         store.updatePlayers(data.players)
       }
@@ -235,12 +246,18 @@ function handleWebSocketMessage(data: any) {
     }
 
     case 'playerConnected': {
+      if (data.creatorId) {
+        store.setCreatorId(data.creatorId)
+      }
       store.updatePlayers(data.players)
       toast.show(`${data.playerName} se ha unido`, 'info')
       break
     }
 
     case 'playerDisconnected': {
+      if (data.creatorId) {
+        store.setCreatorId(data.creatorId)
+      }
       store.updatePlayers(data.players)
       toast.show('Un jugador se desconectó', 'warning')
       break
