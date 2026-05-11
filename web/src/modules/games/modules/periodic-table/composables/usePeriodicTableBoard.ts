@@ -1,4 +1,3 @@
-import { HSOverlay } from 'preline/dist'
 import type { TChemicalElement } from '../types/ChemicalElement'
 import { usePeriodicTableStore } from '../stores/periodic-table-store'
 import { ref } from 'vue'
@@ -7,7 +6,6 @@ import { ref } from 'vue'
 
 export const usePeriodicTableBoard = () => {
   const periodicTable = usePeriodicTableStore()
-  const modal = ref<HSOverlay | null>(null)
   const audioRef = ref<HTMLAudioElement | null>(null)
 
   const orderInBoard = ({ atomicNumber, group, period }: TChemicalElement) => {
@@ -61,9 +59,8 @@ export const usePeriodicTableBoard = () => {
 
   const openModal = ({ element }: { element: TChemicalElement }) => {
     periodicTable.setCurrentElement(element)
-    HSOverlay.open('#hs-scale-animation-modal-periodic-table')
     playElementAudio()
   }
 
-  return { orderInBoard, openModal, modal, audioRef, playElementAudio }
+  return { orderInBoard, openModal, audioRef, playElementAudio }
 }

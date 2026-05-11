@@ -4,7 +4,6 @@ import logo from '@/assets/logo/logo.webp'
 import router from '@/router'
 import type { RouteRecordNameGeneric } from 'vue-router'
 import { watch } from 'vue'
-import { HSCollapse } from 'preline/dist'
 
 const allRoutes = router.getRoutes()
 
@@ -23,7 +22,6 @@ watch(
   () => router.currentRoute.value.path,
   () => {
     console.log('Theme toggled and navbar collapsed')
-    HSCollapse.hide('#hs-navbar-alignment-collapse')
   },
 )
 </script>
