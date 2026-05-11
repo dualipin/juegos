@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen p-6">
+  <div class="min-h-screen p-6 bg-base-200">
     <div class="mx-auto max-w-2xl mb-52 lg:mb-auto">
-      <div class="mb-6 flex justify-between">
+      <div class="mb-6 flex justify-between items-center">
         <LevelIndicator />
         <CoinDisplay />
       </div>
@@ -11,27 +11,20 @@
         v-if="isLoading && !currentQuestion"
         class="py-16 text-center"
       >
-        <div class="inline-flex flex-col items-center gap-4">
-          <div class="relative h-16 w-16">
-            <div
-              class="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"
-            ></div>
-            <div
-              class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-blue-500 dark:border-t-blue-400"
-            ></div>
-            <span class="absolute inset-0 flex items-center justify-center text-2xl">🧠</span>
-          </div>
-          <p class="text-lg font-medium text-gray-600 dark:text-gray-300">
+        <div class="flex flex-col items-center gap-4">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <p class="text-xl font-bold text-primary">
             Generando preguntas sobre Macuspana...
           </p>
-          <p class="text-sm text-gray-400 dark:text-gray-500">
+          <p class="text-base-content/70">
             La IA está creando trivia personalizada
           </p>
         </div>
       </div>
 
       <QuestionCard v-else-if="currentQuestion" />
-      <div v-else class="py-10 text-center dark:text-gray-300">
+      <div v-else class="py-10 text-center">
+        <span class="loading loading-dots loading-md"></span>
         <p class="text-lg">Cargando pregunta...</p>
       </div>
 

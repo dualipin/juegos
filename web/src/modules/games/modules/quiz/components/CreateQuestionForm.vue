@@ -1,60 +1,152 @@
 <template>
-    <div
-        class="create-question-form p-8 bg-gradient-to-br from-white via-gray-100 to-blue-50 rounded-2xl shadow-xl dark:from-gray-900 dark:via-gray-800 dark:to-blue-900">
-        <h2 class="text-2xl font-extrabold mb-6 text-blue-700 dark:text-blue-300 tracking-tight">Crear nueva pregunta
-        </h2>
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-            <div>
-                <label class="block mb-2 font-semibold text-gray-700 dark:text-gray-200">Pregunta</label>
-                <input v-model="form.question" type="text"
-                    class="w-full p-3 border-2 border-blue-400 dark:border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100"
-                    required />
-            </div>
-            <div>
-                <label class="block mb-2 font-semibold text-gray-700 dark:text-gray-200">Opciones</label>
-                <div v-for="(option, idx) in form.options" :key="idx" class="flex items-center mb-2 gap-2">
-                    <input v-model="form.options[idx]" type="text"
-                        class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-900 dark:text-gray-100"
-                        required />
-                    <button type="button" @click="removeOption(idx)"
-                        class="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold transition-colors duration-150 shadow">
-                        Eliminar
-                    </button>
-                </div>
-                <button type="button" @click="addOption"
-                    class="mt-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors duration-150 shadow">
-                    Agregar opción
-                </button>
-            </div>
-            <div>
-                <label class="block mb-2 font-semibold text-gray-700 dark:text-gray-200">Respuesta correcta</label>
-                <input v-model="form.answer" type="text"
-                    class="w-full p-3 border-2 border-green-400 dark:border-green-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-900 dark:text-gray-100"
-                    required />
-            </div>
-            <div>
-                <label class="block mb-2 font-semibold text-gray-700 dark:text-gray-200">Dificultad</label>
-                <select v-model="form.difficulty"
-                    class="w-full p-3 border-2 border-purple-400 dark:border-purple-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-gray-100">
-                    <option value="easy">Fácil</option>
-                    <option value="medium">Medio</option>
-                    <option value="hard">Difícil</option>
-                </select>
-            </div>
-            <button type="submit"
-                class="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-3 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-500 transition-all duration-150 shadow-lg">
-                Crear pregunta
-            </button>
-        </form>
-        <div v-if="success"
-            class="mt-6 p-4 rounded-lg bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 font-semibold shadow">
-            ¡Pregunta creada exitosamente!
+  <div
+    class="create-question-form card bg-base-100 shadow-xl border border-base-300"
+  >
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-black text-primary mb-6">
+        Crear nueva pregunta
+      </h2>
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-bold">Pregunta</span>
+          </label>
+          <input
+            v-model="form.question"
+            type="text"
+            placeholder="Escribe la pregunta aquí..."
+            class="input input-bordered input-primary w-full"
+            required
+          />
         </div>
-        <div v-if="error"
-            class="mt-6 p-4 rounded-lg bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 font-semibold shadow">
-            Error al crear la pregunta.
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-bold">Opciones</span>
+          </label>
+          <div class="space-y-3">
+            <div
+              v-for="(option, idx) in form.options"
+              :key="idx"
+              class="flex items-center gap-2"
+            >
+              <input
+                v-model="form.options[idx]"
+                type="text"
+                :placeholder="`Opción ${String.fromCharCode(65 + idx)}`"
+                class="input input-bordered flex-1"
+                required
+              />
+              <button
+                type="button"
+                @click="removeOption(idx)"
+                class="btn btn-error btn-square btn-sm"
+                title="Eliminar opción"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="addOption"
+            class="btn btn-outline btn-sm mt-4 gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Agregar opción
+          </button>
         </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-bold">Respuesta correcta</span>
+          </label>
+          <input
+            v-model="form.answer"
+            type="text"
+            placeholder="Debe coincidir exactamente con una opción"
+            class="input input-bordered input-success w-full"
+            required
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-bold">Dificultad</span>
+          </label>
+          <select v-model="form.difficulty" class="select select-bordered w-full">
+            <option value="easy">Fácil</option>
+            <option value="medium">Medio</option>
+            <option value="hard">Difícil</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-8 shadow-md">
+          Crear pregunta
+        </button>
+      </form>
+
+      <div v-if="success" class="alert alert-success mt-6 shadow-sm">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>¡Pregunta creada exitosamente!</span>
+      </div>
+
+      <div v-if="error" class="alert alert-error mt-6 shadow-sm">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>Error al crear la pregunta. Verifica tus permisos.</span>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -6,7 +6,7 @@ import { generateMacuspanaQuestions } from '../service/gemini.service.js'
  */
 export async function generateQuestions(req, res) {
   try {
-    const { count = 5, difficulty = 'easy' } = req.body
+    const { count = 5, difficulty = 'easy', exclude = [] } = req.body
 
     // Validar parámetros
     const validDifficulties = ['easy', 'medium', 'hard']
@@ -19,7 +19,7 @@ export async function generateQuestions(req, res) {
     const maxCount = 10
     const questionCount = Math.min(Math.max(1, parseInt(count)), maxCount)
 
-    const questions = await generateMacuspanaQuestions(questionCount, difficulty)
+    const questions = await generateMacuspanaQuestions(questionCount, difficulty, exclude)
 
     return res.json(questions)
   } catch (error) {

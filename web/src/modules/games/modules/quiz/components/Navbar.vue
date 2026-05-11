@@ -5,14 +5,6 @@ import { computed } from 'vue'
 
 const quizStore = useQuizStore()
 
-const buttonClasses = {
-  base: 'rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-opacity-50',
-  inactive:
-    'bg-gray-100 text-gray-700 hover:bg-gray-200/80 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:bg-gray-700/80',
-  active:
-    'bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800',
-}
-
 const createdBy = computed(() => quizStore.createdBy)
 
 function selectCreator(creator: 'system' | 'IA' | 'community') {
@@ -24,61 +16,43 @@ function selectCreator(creator: 'system' | 'IA' | 'community') {
 <template>
   <SimpleNav class="animate-fade-in-down">
     <div
-      class="animate-fade-in gap-5 flex flex-1 flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-      <h2 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-        Desafío de Preguntas
-      </h2>
+      class="animate-fade-in gap-5 flex flex-1 flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0"
+    >
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-primary/10 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-black tracking-tight text-base-content">
+          Desafío de Preguntas
+        </h2>
+      </div>
 
       <nav aria-label="Quiz creation options">
-        <ul class="inline-flex space-x-2 rounded-xl bg-gray-100/60 p-1.5 dark:bg-gray-800/60">
-          <li>
-            <button @click="selectCreator('system')" :class="[
-              buttonClasses.base,
-              createdBy === 'system' ? buttonClasses.active : buttonClasses.inactive,
-            ]" aria-current="page">
-              <span class="flex items-center space-x-1.5">
-                <svg v-if="createdBy === 'system'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-                  viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
-                </svg>
-                Del sistema
-              </span>
-            </button>
-          </li>
-          <li>
-            <button @click="selectCreator('IA')" :class="[
-              buttonClasses.base,
-              createdBy === 'IA' ? buttonClasses.active : buttonClasses.inactive,
-            ]">
-              <span class="flex items-center space-x-1.5">
-                <svg v-if="createdBy === 'IA'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
-                  fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
-                </svg>
-                Con IA
-              </span>
-            </button>
-          </li>
-          <li>
-            <button @click="selectCreator('community')" :class="[
-              buttonClasses.base,
-              createdBy === 'community' ? buttonClasses.active : buttonClasses.inactive,
-            ]">
-              <span class="flex items-center space-x-1.5">
-                <svg v-if="createdBy === 'community'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-                  viewBox="0 0 20 20" fill="currentColor">
-                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" />
-                  <circle cx="10" cy="10" r="4" fill="currentColor" />
-                </svg>
-                Comunidad
-              </span>
-            </button>
-          </li>
-        </ul>
+        <div class="join bg-base-200 p-1 rounded-xl">
+          <button
+            @click="selectCreator('system')"
+            class="btn btn-sm join-item normal-case border-none"
+            :class="createdBy === 'system' ? 'btn-primary shadow-sm' : 'btn-ghost'"
+          >
+            Del sistema
+          </button>
+          <button
+            @click="selectCreator('IA')"
+            class="btn btn-sm join-item normal-case border-none"
+            :class="createdBy === 'IA' ? 'btn-primary shadow-sm' : 'btn-ghost'"
+          >
+            Con IA
+          </button>
+          <button
+            @click="selectCreator('community')"
+            class="btn btn-sm join-item normal-case border-none"
+            :class="createdBy === 'community' ? 'btn-primary shadow-sm' : 'btn-ghost'"
+          >
+            Comunidad
+          </button>
+        </div>
       </nav>
     </div>
   </SimpleNav>

@@ -39,7 +39,11 @@ export const useQuizStore = defineStore(
         } else {
           // Fetch un lote nuevo de preguntas de Macuspana con IA
           const difficulty = getDifficultyForLevel()
-          const newQuestions = await generateAIQuestions(5, difficulty)
+          
+          // Obtener textos de preguntas ya vistas para evitar repeticiones
+          const seenQuestionTexts = allQuestions.value.map(q => q.question)
+          
+          const newQuestions = await generateAIQuestions(5, difficulty, seenQuestionTexts)
 
           if (newQuestions.length > 0) {
             currentQuestion.value = newQuestions[0]

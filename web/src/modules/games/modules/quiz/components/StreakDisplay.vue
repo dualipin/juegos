@@ -1,14 +1,14 @@
 <template>
-  <div v-if="showStreak" ref="streakContainer" class="mt-4 opacity-0">
+  <div v-if="showStreak" ref="streakContainer" class="mt-8 opacity-0">
     <div class="flex items-center justify-center">
       <div
         ref="streakBadge"
-        class="flex items-center rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm dark:border-blue-800 dark:bg-blue-900"
+        class="alert alert-info shadow-lg max-w-sm gap-4"
       >
         <svg
           ref="streakIcon"
           xmlns="http://www.w3.org/2000/svg"
-          class="mr-2 h-5 w-5 text-yellow-500 opacity-0 dark:text-yellow-400"
+          class="h-6 w-6 text-warning"
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -18,9 +18,12 @@
             clip-rule="evenodd"
           />
         </svg>
-        <span ref="streakText" class="font-medium text-blue-800 opacity-0 dark:text-blue-200">
-          {{ streakMessage }} (Récord: {{ highestStreak }})
-        </span>
+        <div class="flex flex-col">
+          <span ref="streakText" class="font-bold text-info-content">
+            {{ streakMessage }}
+          </span>
+          <span class="text-xs opacity-70">Récord actual: {{ highestStreak }}</span>
+        </div>
       </div>
     </div>
   </div>

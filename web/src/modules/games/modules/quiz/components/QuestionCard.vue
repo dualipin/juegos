@@ -1,118 +1,113 @@
 <template>
   <div
-    class="animate-sink animate-iteration-count-infinite animate-duration-[2s] relative overflow-hidden rounded-xl bg-white p-8 shadow-xl dark:bg-gray-800"
+    class="animate-sink animate-iteration-count-infinite animate-duration-[2s] card bg-base-100 shadow-xl overflow-hidden"
   >
-    <!-- Elementos decorativos (ya ocultos inicialmente) -->
+    <!-- Elementos decorativos -->
     <div
       ref="decor1"
-      class="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-blue-100/30 blur-xl dark:bg-blue-900/20"
+      class="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/10 blur-xl"
     ></div>
     <div
       ref="decor2"
-      class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-purple-100/30 blur-xl dark:bg-purple-900/20"
+      class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-secondary/10 blur-xl"
     ></div>
 
-    <!-- Encabezado -->
-    <div class="relative mb-6 flex items-center justify-between">
-      <span
-        ref="difficultyBadge"
-        class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium shadow-sm"
-        :class="difficultyClass"
-      >
-        <span class="mr-1.5 h-2 w-2 rounded-full" :class="difficultyDotClass"></span>
-        {{ difficultyText }}
-      </span>
+    <div class="card-body relative z-10">
+      <!-- Encabezado -->
+      <div class="flex items-center justify-between mb-4">
+        <div
+          ref="difficultyBadge"
+          class="badge badge-md gap-2 font-semibold py-3"
+          :class="difficultyClass"
+        >
+          <span class="h-2 w-2 rounded-full" :class="difficultyDotClass"></span>
+          {{ difficultyText }}
+        </div>
 
-      <div ref="headerRight" class="flex items-center space-x-3">
-        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
-          <template v-if="currentQuestion?.created_by === 'system'">
-            Pregunta del sistema
-          </template>
-          <template v-else-if="currentQuestion?.created_by === 'IA'">
-            Pregunta generada por IA
-          </template>
-          <template v-else>
-            Pregunta de la comunidad
-            <span class="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs dark:bg-blue-900 dark:text-blue-200">{{ currentQuestion?.created_by }}</span>
-          </template>
-        </span>
-        <HintButton
-          v-if="hasHintAvailable"
-          @hint-used="showHint"
-          class="transition-transform hover:scale-110"
-        />
-      </div>
-    </div>
-
-    <!-- Pregunta -->
-    <h2
-      ref="questionText"
-      class="mb-6 text-2xl font-bold tracking-tight text-gray-800 dark:text-gray-100"
-    >
-      {{ currentQuestion?.question }}
-    </h2>
-
-    <!-- Pista -->
-    <div
-      v-if="hintShown"
-      ref="hintBox"
-      class="mb-6 overflow-hidden rounded-lg border-l-4 border-yellow-400 bg-yellow-50/80 p-4 backdrop-blur-sm dark:bg-yellow-900/20"
-    >
-      <p class="text-yellow-700 dark:text-yellow-300">{{ currentQuestion?.answer }}</p>
-    </div>
-
-    <!-- Opciones -->
-    <div class="space-y-3">
-      <button
-        v-for="(option, index) in currentQuestion?.options"
-        :key="index"
-        ref="optionButtons"
-        @click="selectAnswer(option)"
-        class="group relative w-full overflow-hidden rounded-xl border px-5 py-3 text-left transition-all duration-300 hover:shadow-md dark:text-white"
-        :class="{
-          'border-green-300/80 bg-green-50/50 shadow-green-100 dark:border-green-700/50 dark:bg-green-900/20 dark:shadow-green-900/30':
-            selectedAnswer === option && isCorrect,
-          'border-red-300/80 bg-red-50/50 shadow-red-100 dark:border-red-700/50 dark:bg-red-900/20 dark:shadow-red-900/30':
-            selectedAnswer === option && !isCorrect,
-          'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600':
-            !answerSubmitted,
-          'pointer-events-none': answerSubmitted,
-        }"
-      >
-        <span
-          class="absolute inset-0 h-full w-0 bg-gray-100/50 transition-all duration-500 group-hover:w-full dark:bg-gray-700/30"
-        ></span>
-        <span class="relative z-10 flex items-center">
-          <span
-            class="mr-3 flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-sm font-medium group-hover:bg-gray-200 dark:bg-gray-700 dark:group-hover:bg-gray-600"
-          >
-            {{ String.fromCharCode(65 + index) }}
+        <div ref="headerRight" class="flex items-center gap-3">
+          <span class="text-xs font-medium opacity-70">
+            <template v-if="currentQuestion?.created_by === 'system'">
+              <span class="badge badge-ghost badge-sm">Sistema</span>
+            </template>
+            <template v-else-if="currentQuestion?.created_by === 'IA'">
+              <span class="badge badge-info badge-sm">IA</span>
+            </template>
+            <template v-else>
+              <span class="badge badge-outline badge-sm">Comunidad: {{ currentQuestion?.created_by }}</span>
+            </template>
           </span>
-          {{ option }}
-        </span>
-      </button>
-    </div>
-
-    <!-- Retroalimentación -->
-    <div v-if="answerSubmitted" ref="feedbackBox" class="mt-6">
-      <div class="mb-6 text-center">
-        <p v-if="isCorrect" class="text-xl font-semibold text-green-600 dark:text-green-400">
-          <span class="mr-2">🎉</span> ¡Correcto! {{ streakMessage }}
-        </p>
-        <p v-else class="text-xl font-semibold text-red-600 dark:text-red-400">
-          <span class="mr-2">😕</span> Incorrecto. La respuesta correcta es:
-          {{ currentQuestion?.answer }}
-        </p>
+          <HintButton
+            v-if="hasHintAvailable"
+            @hint-used="showHint"
+            class="transition-transform hover:scale-110"
+          />
+        </div>
       </div>
-      <button
-        ref="nextButton"
-        @click="nextQuestion"
-        class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl"
+
+      <!-- Pregunta -->
+      <h2
+        ref="questionText"
+        class="card-title text-2xl mb-6 text-base-content leading-tight"
       >
-        <span class="relative z-10 flex items-center justify-center">
+        {{ currentQuestion?.question }}
+      </h2>
+
+      <!-- Pista -->
+      <div
+        v-if="hintShown"
+        ref="hintBox"
+        class="mb-6 overflow-hidden rounded-lg border-l-4 border-warning bg-warning/10 p-4"
+      >
+        <p class="text-warning-content font-medium">{{ currentQuestion?.answer }}</p>
+      </div>
+
+      <!-- Opciones -->
+      <div class="grid gap-3">
+        <button
+          v-for="(option, index) in currentQuestion?.options"
+          :key="index"
+          ref="optionButtons"
+          @click="selectAnswer(option)"
+          class="btn btn-lg justify-start h-auto py-4 normal-case text-left font-medium"
+          :class="{
+            'btn-success text-success-content': selectedAnswer === option && isCorrect,
+            'btn-error text-error-content': selectedAnswer === option && !isCorrect,
+            'btn-outline': !answerSubmitted,
+            'pointer-events-none opacity-50': answerSubmitted && selectedAnswer !== option,
+            'opacity-100': selectedAnswer === option
+          }"
+        >
+          <span class="badge badge-ghost mr-3 font-bold">{{ String.fromCharCode(65 + index) }}</span>
+          <span class="flex-1">{{ option }}</span>
+        </button>
+      </div>
+
+      <!-- Retroalimentación -->
+      <div v-if="answerSubmitted" ref="feedbackBox" class="mt-8">
+        <div 
+          class="alert mb-6 shadow-sm"
+          :class="isCorrect ? 'alert-success' : 'alert-error'"
+        >
+          <div class="flex-1 flex flex-col items-center gap-2">
+            <span v-if="isCorrect" class="text-xl font-bold flex items-center gap-2">
+              <span>🎉</span> ¡Correcto!
+            </span>
+            <span v-else class="text-xl font-bold flex items-center gap-2">
+              <span>😕</span> Incorrecto
+            </span>
+            <p v-if="isCorrect" class="text-sm opacity-90">{{ streakMessage }}</p>
+            <p v-else class="text-sm opacity-90">La respuesta correcta era: <strong>{{ currentQuestion?.answer }}</strong></p>
+          </div>
+        </div>
+
+        <button
+          ref="nextButton"
+          @click="nextQuestion"
+          class="btn btn-primary btn-block btn-lg gap-2 shadow-lg"
+        >
           Siguiente Pregunta
           <svg
-            class="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -124,11 +119,8 @@
               d="M14 5l7 7m0 0l-7 7m7-7H3"
             />
           </svg>
-        </span>
-        <span
-          class="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-500 group-hover:w-full"
-        ></span>
-      </button>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -170,20 +162,20 @@ const difficultyClass = computed(() => {
   if (!currentQuestion.value) return ''
   const difficulty = currentQuestion.value.difficulty
   return difficulty === 'easy'
-    ? 'bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+    ? 'badge-success text-success-content'
     : difficulty === 'medium'
-      ? 'bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
-      : 'bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+      ? 'badge-warning text-warning-content'
+      : 'badge-error text-error-content'
 })
 
 const difficultyDotClass = computed(() => {
   if (!currentQuestion.value) return ''
   const difficulty = currentQuestion.value.difficulty
   return difficulty === 'easy'
-    ? 'bg-green-500'
+    ? 'bg-success-content/50'
     : difficulty === 'medium'
-      ? 'bg-yellow-500'
-      : 'bg-red-500'
+      ? 'bg-warning-content/50'
+      : 'bg-error-content/50'
 })
 
 watch(currentQuestion, (newQuestion) => {

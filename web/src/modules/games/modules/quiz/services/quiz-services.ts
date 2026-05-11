@@ -49,11 +49,13 @@ export async function createQuestion(question: Question) {
 export async function generateAIQuestions(
   count: number = 5,
   difficulty: QuestionDifficulty = 'easy',
+  exclude: string[] = [],
 ): Promise<Question[]> {
   try {
     const response = await api.post<Question[]>(`${V1_QUIZ_API_URL}/generate`, {
       count,
       difficulty,
+      exclude,
     })
     return response.data
   } catch (error) {

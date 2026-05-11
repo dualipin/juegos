@@ -34,15 +34,21 @@ Responde ÚNICAMENTE con un JSON válido (sin markdown, sin bloques de código) 
  * Genera preguntas de trivia sobre Macuspana usando Gemini AI
  * @param {number} count - Número de preguntas a generar
  * @param {'easy' | 'medium' | 'hard'} difficulty - Dificultad de las preguntas
+ * @param {Array<string>} excludeQuestions - Lista de preguntas a evitar
  * @returns {Promise<Array>} Array de preguntas generadas
  */
-export async function generateMacuspanaQuestions(count = 5, difficulty = 'easy') {
-  const prompt = MACUSPANA_PROMPT
+export async function generateMacuspanaQuestions(count = 5, difficulty = 'easy', excludeQuestions = []) {
+  let prompt = MACUSPANA_PROMPT
     .replace(/{count}/g, String(count))
     .replace(/{difficulty}/g, difficulty)
 
+  if (excludeQuestions && excludeQuestions.length > 0) {
+    prompt += `\n\nIMPORTANTE: NO generes ninguna de las siguientes preguntas (ya han sido mostradas):
+${excludeQuestions.map((q) => `- ${q}`).join('\n')}`
+  }
+
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
 
     const result = await model.generateContent(prompt)
     const response = result.response

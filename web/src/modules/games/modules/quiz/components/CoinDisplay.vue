@@ -1,14 +1,14 @@
 <template>
-  <div ref="coinsContainer" class="flex items-center opacity-0">
-    <span ref="coinsLabel" class="mr-2 text-gray-700 opacity-0 dark:text-gray-300"> Monedas: </span>
-    <span
+  <div ref="coinsContainer" class="flex items-center gap-2 opacity-0">
+    <span ref="coinsLabel" class="text-sm font-bold uppercase tracking-wider opacity-60">Monedas</span>
+    <div
       ref="coinsBadge"
-      class="flex items-center rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800 opacity-0 dark:bg-amber-400/50 dark:text-yellow-200"
+      class="badge badge-warning badge-lg font-black px-4 py-3 shadow-sm gap-1"
     >
       <svg
         ref="coinsIcon"
         xmlns="http://www.w3.org/2000/svg"
-        class="mr-1 h-4 w-4 opacity-0"
+        class="h-4 w-4"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -21,7 +21,7 @@
         />
       </svg>
       <span ref="coinsAmount">{{ coins }}</span>
-    </span>
+    </div>
   </div>
 </template>
 
