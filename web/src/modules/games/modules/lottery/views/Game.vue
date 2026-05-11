@@ -1,112 +1,293 @@
 <template>
-  <div class="p-6 text-gray-800 transition-colors duration-200 dark:text-gray-100">
+  <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 p-6">
     <!-- Encabezado -->
-    <header class="mb-8 text-center">
-      <h2 class="mb-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-        Sala:
-        <span class="rounded-lg bg-gray-200 px-3 py-1 font-mono dark:bg-gray-700">{{
-          store.roomCode
-        }}</span>
-      </h2>
-      <h3 class="text-xl font-semibold">
-        Jugador: <span class="text-indigo-500 dark:text-indigo-300">{{ store.playerName }}</span>
-      </h3>
+    <header class="mb-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 class="font-display text-4xl font-black text-error">LOTERÍA</h1>
+          <p class="text-sm text-base-content/60">
+            Sala: <span class="font-mono font-bold text-error">{{ store.roomCode }}</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span v-if="!store.connected" class="badge badge-warning">
+            <span class="loading loading-spinner loading-sm"></span>
+            Reconectando...
+          </span>
+          <span v-else class="badge badge-success">Conectado</span>
+          <button
+            @click="handleLeaveRoom"
+            class="btn btn-sm btn-ghost"
+            title="Salir de la sala"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
     </header>
 
-    <!-- Botón de Lotería -->
-    <div v-if="isCardComplete" class="mb-8 flex justify-center">
+    <!-- Botón de Lotería (si es completo) -->
+    <div v-if="store.isCardComplete" class="mb-6 flex justify-center">
       <button
         @click="declareBingo"
-        class="focus:ring-opacity-50 transform rounded-lg bg-green-600 px-6 py-3 font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-green-700 hover:shadow-lg focus:ring-2 focus:ring-green-500 focus:outline-none dark:bg-green-700 dark:hover:bg-green-800"
+        class="btn btn-lg btn-success gap-2 text-white font-display animate-pulse"
       >
-        ¡Lotería!
+        <span class="text-3xl">🎉</span>
+        ¡LOTERÍA!
       </button>
     </div>
 
-    <!-- Componente para lanzar elementos (solo host) -->
-    <ElementDrawer v-if="store.isHost" @draw="handleDraw" />
+    <div class="grid lg:grid-cols-3 gap-6">
+      <!-- Panel principal: Cartas lanzadas y controles -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Botón lanzar (solo host) -->
+        <div v-if="store.isHost" class="card bg-base-100 shadow-lg border border-base-200">
+          <div class="card-body">
+            <h3 class="card-title text-base-content">Panel del anfitrión</h3>
+            <p class="text-sm text-base-content/60 mb-4">
+              Cartas lanzadas: <span class="font-bold">{{ store.drawnElements.length }} / {{ maxCards }}</span>
+            </p>
+            <button
+              @click="handleDraw"
+              :disabled="!store.connected || store.drawnElements.length >= maxCards || isDrawing"
+              class="btn btn-lg btn-primary gap-2 w-full font-display"
+            >
+              <span v-if="isDrawing" class="loading loading-spinner"></span>
+              <span class="text-2xl">🎴</span>
+              {{ isDrawing ? 'Lanzando...' : 'Lanzar carta' }}
+            </button>
+          </div>
+        </div>
 
-    <!-- Elementos lanzados -->
-    <section class="mb-8 rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
-      <h4 class="mb-4 text-center text-lg font-semibold">Elementos lanzados:</h4>
-      <div class="flex flex-wrap justify-center gap-2">
-        <span
-          v-for="el in store.drawnElements"
-          :key="el"
-          class="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100"
-        >
-          {{ el }}
-        </span>
+        <!-- Cartas lanzadas -->
+        <div class="card bg-base-100 shadow-lg border border-base-200">
+          <div class="card-body">
+            <h3 class="card-title text-base-content mb-4">Cartas lanzadas</h3>
+            <div v-if="store.drawnElements.length === 0" class="text-center py-8 text-base-content/40">
+              <p class="text-lg">Esperando cartas...</p>
+            </div>
+            <div v-else class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div
+                v-for="card in store.drawnElements"
+                :key="card"
+                class="flex items-center justify-center aspect-square overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
+              >
+                <img
+                  :src="cardImage(card)"
+                  :alt="cardLabel(card)"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
-    <!-- Tarjeta de jugador -->
-    <section class="mb-10">
-      <PlayerCard :elements="store.card" :drawn="store.drawnElements" />
-    </section>
 
-    <!-- Mensaje de ganador -->
-    <div
-      v-if="store.winner"
-      class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
-    >
-      <div
-        class="animate-bounce-in w-full max-w-md rounded-xl bg-white p-8 text-center dark:bg-gray-800"
-      >
-        <h2 class="mb-4 flex justify-center text-3xl font-bold text-green-600 dark:text-green-400">
-          <span class="mr-2">🎉</span> ¡Ganó {{ store.winner }}! <span class="ml-2">🎉</span>
-        </h2>
-        <p class="mb-6 text-lg">Felicidades al ganador</p>
-        <button
-          @click="$router.push({ name: 'games.lottery' })"
-          class="rounded-lg bg-indigo-600 px-6 py-2 text-white transition-colors duration-200 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800"
-        >
-          Nuevo juego
-        </button>
+      <!-- Panel derecho: Mi cartón y jugadores -->
+      <div class="space-y-6">
+        <!-- Mi cartón (4x4) -->
+        <div class="card bg-base-100 shadow-lg border-2 border-success">
+          <div class="card-body">
+            <h3 class="card-title text-base-content">Mi cartón</h3>
+            <div class="grid grid-cols-4 gap-1 mt-4">
+              <div
+                v-for="card in store.card"
+                :key="card"
+                :class="[
+                  'flex items-center justify-center aspect-square overflow-hidden rounded transition-all duration-300',
+                  store.drawnElements.includes(card)
+                    ? 'bg-success text-white shadow-lg scale-110'
+                    : 'bg-base-200 text-base-content border-2 border-base-300',
+                ]"
+              >
+                <img
+                  :src="cardImage(card)"
+                  :alt="cardLabel(card)"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div
+              v-if="store.isCardComplete"
+              class="mt-4 alert alert-success"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>¡Cartón completo! ¡Presiona LOTERÍA!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jugadores conectados -->
+        <div class="card bg-base-100 shadow-lg border border-base-200">
+          <div class="card-body">
+            <h3 class="card-title text-base-content">Jugadores</h3>
+            <div class="space-y-2">
+              <div
+                v-for="player in store.playersList"
+                :key="player.id"
+                :class="[
+                  'flex items-center gap-2 p-2 rounded-lg transition-colors',
+                  player.id === store.playerId
+                    ? 'bg-primary/20 text-primary font-bold'
+                    : 'bg-base-200 text-base-content',
+                ]"
+              >
+                <span v-if="player.isHost" class="badge badge-warning">👑</span>
+                <span class="flex-1 truncate">{{ player.name }}</span>
+                <span v-if="player.id === store.playerId" class="badge badge-sm">TÚ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de ganador -->
+    <div v-if="store.winner" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="card bg-base-100 shadow-2xl max-w-md w-full mx-4">
+        <div class="card-body text-center">
+          <div class="text-6xl mb-4">🎉</div>
+          <h2 class="card-title justify-center text-2xl text-success mb-2">
+            ¡{{ store.winner }} ganó!
+          </h2>
+          <p class="text-base-content/60 mb-6">¡Felicidades!</p>
+          <div class="flex gap-3">
+            <button @click="handleNewGame" class="btn btn-success flex-1">
+              Nuevo juego
+            </button>
+            <button @click="handleLeaveRoom" class="btn btn-ghost flex-1">
+              Salir
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
-import { useGameStore } from '../stores/game'
-import { connectWebSocket, sendMessage } from '../services/socket'
-import PlayerCard from '../components/PlayerCard.vue'
-import ElementDrawer from '../components/ElementDrawer.vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useGameStore } from '../stores/game'
 import { useToastStore } from '@/stores'
+import { connectWebSocket, sendMessage, disconnectWebSocket } from '../services/socket'
+import { speakCard } from '../utils/textToSpeech'
+import { getLotteryCard, lotteryCards } from '../data/cards'
 
-const store = useGameStore()
 const router = useRouter()
+const store = useGameStore()
 const toast = useToastStore()
+const isDrawing = ref(false)
+const maxCards = lotteryCards.length
 
-const isCardComplete = computed(() => store.card.every((el) => store.drawnElements.includes(el)))
-
-const handleDraw = () => {
-  sendMessage({ action: 'draw' })
+function cardImage(card: string) {
+  return getLotteryCard(card)?.image ?? `/loteria/${card}.jpeg`
 }
 
-const declareBingo = () => {
-  sendMessage({ action: 'bingo' })
+function cardLabel(card: string) {
+  return getLotteryCard(card)?.nombre ?? `Carta ${card}`
 }
 
 onMounted(() => {
+  // Validar que estemos conectados
   if (!store.roomCode || !store.playerId) {
     toast.show('Debes unirte a una sala primero', 'error')
     router.push({ name: 'games.lottery' })
     return
   }
 
-  connectWebSocket(store.roomCode, store.playerId, (data) => {
-    if (data.event === 'draw') {
-      store.drawnElements.push(data.element)
-    } else if (data.event === 'winner') {
-      store.winner = data.player_name
-    } else if (data.event === 'player_left') {
-      toast.show(`${data.player_name} ha abandonado la sala`, 'info')
-    } else if (data.error) {
-      toast.show(`Error: ${data.error}`, 'error')
-    }
-  })
+  // Conectar WebSocket
+  connectWebSocket(store.roomCode, store.playerId, handleWebSocketMessage)
+
+  // Limpiar voces de síntesis al cargar
+  window.speechSynthesis.getVoices()
 })
+
+onBeforeUnmount(() => {
+  disconnectWebSocket()
+})
+
+function handleWebSocketMessage(data: any) {
+  switch (data.type) {
+    case 'connected': {
+      store.setConnected(true)
+      if (data.players) {
+        store.updatePlayers(data.players)
+      }
+      if (data.drawnCards) {
+        data.drawnCards.forEach((card: string) => {
+          if (!store.drawnElements.includes(card)) {
+            store.drawCard(card)
+          }
+        })
+      }
+      break
+    }
+
+    case 'cardDrawn': {
+      const card = data.card
+      store.drawCard(card)
+      // Reproducir el nombre de la carta en voz
+      speakCard(card)
+      break
+    }
+
+    case 'playerConnected': {
+      store.updatePlayers(data.players)
+      toast.show(`${data.playerName} se ha unido`, 'info')
+      break
+    }
+
+    case 'playerDisconnected': {
+      store.updatePlayers(data.players)
+      toast.show('Un jugador se desconectó', 'warning')
+      break
+    }
+
+    case 'disconnected': {
+      store.setConnected(false)
+      break
+    }
+
+    case 'winner': {
+      store.setWinner(data.winnerName)
+      break
+    }
+
+    case 'bingoFailed': {
+      toast.show(data.message, 'error')
+      break
+    }
+
+    case 'error': {
+      toast.show(data.message, 'error')
+      break
+    }
+  }
+}
+
+function handleDraw() {
+  isDrawing.value = true
+  sendMessage({ action: 'draw' })
+  setTimeout(() => {
+    isDrawing.value = false
+  }, 500)
+}
+
+function declareBingo() {
+  sendMessage({ action: 'bingo' })
+}
+
+function handleNewGame() {
+  store.resetGame()
+  router.push({ name: 'games.lottery' })
+}
+
+function handleLeaveRoom() {
+  store.resetGame()
+  disconnectWebSocket()
+  router.push({ name: 'games.lottery' })
+}
 </script>

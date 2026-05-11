@@ -1,8 +1,9 @@
 import {Router} from 'express'
+import { obtenerSalas, crearSala, unirseSala, obtenerSala } from '../controllers/loteria.js'
 
 export const router = Router()
 
-router.get('/loteria', (req, res) => {
-  const numeros = Array.from({length: 6}, () => Math.floor(Math.random() * 60) + 1)
-  res.json({numeros})
-})
+router.get('/v1/games/lottery/rooms', obtenerSalas)
+router.post('/v1/games/lottery/rooms', crearSala)
+router.post('/v1/games/lottery/rooms/join', unirseSala)
+router.get('/v1/games/lottery/rooms/:roomCode', obtenerSala)

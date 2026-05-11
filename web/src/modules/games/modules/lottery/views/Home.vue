@@ -1,244 +1,219 @@
 <template>
-  <div class="flex flex-col items-center justify-center py-20">
-    <!-- Título principal -->
-    <div class="mb-8 text-center">
-      <h1 class="mb-4 flex items-center justify-center text-4xl font-bold">
-        Lotería
-      </h1>
-      <p class="text-lg">
-        La que ya conoces
+  <div class="min-h-screen flex flex-col items-center py-10 px-4 overflow-x-hidden pt-32">
+    <!-- Hero -->
+    <div class="text-center mb-8 z-10">
+      <p class="text-xs tracking-[0.35em] uppercase mb-2 font-medium text-warning">
+        ¡El juego de todos!
       </p>
+      <h1 class="font-display text-6xl font-black leading-none tracking-tight text-error">
+        <span class="ornament">✦</span>Lotería<span class="ornament">✦</span>
+      </h1>
+      <p class="mt-2 italic text-base-content/60 font-serif">La que ya conoces, ahora en línea</p>
     </div>
 
+    <!-- Film Strip 1 -->
+    <FilmStrip :cartas="firstHalf" direction="forward" class="mb-8" />
+
     <!-- Formulario -->
-    <form @submit.prevent="handleAction" class="w-full max-w-md space-y-6 rounded-xl border p-8 shadow-lg">
-      <!-- Campo de nombre -->
-      <div class="space-y-2">
-        <label for="name" class="mb-2 block text-sm font-medium dark:text-white">
-          Nombre del jugador:
-        </label>
-        <input v-model="playerName" type="text" id="name" required
-          class="input input-bordered w-full"
-          placeholder="Ej: Marie Curie" />
-      </div>
+    <div class="card bg-base-100 shadow-xl w-full max-w-md relative overflow-hidden border border-base-200">
+      <!-- Barra decorativa superior -->
+      <div class="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-error via-warning to-success" />
 
-      <!-- Acciones principales -->
-      <div class="flex space-x-4">
-        <button type="button" @click="action = 'create'" :class="[
-          'focus:ring-opacity-50 flex-1 rounded-lg px-4 py-3 font-medium transition focus:ring-2',
-          action === 'create'
-            ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:from-indigo-600 hover:to-purple-700 hover:shadow-xl active:scale-95'
-            : 'border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-600 focus:border-blue-600 focus:text-blue-600 focus:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-blue-600 dark:hover:text-blue-500 dark:focus:border-blue-600 dark:focus:text-blue-500',
-        ]">
-          Crear sala
-        </button>
-        <button type="button" @click="action = 'join'" :class="[
-          'focus:ring-opacity-50 flex-1 rounded-lg px-4 py-3 font-medium transition focus:ring-2',
-          action === 'join'
-            ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:from-indigo-600 hover:to-purple-700 hover:shadow-xl active:scale-95'
-            : 'border border-gray-200 text-gray-500 hover:border-blue-600 hover:text-blue-600 focus:border-blue-600 focus:text-blue-600 focus:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-blue-600 dark:hover:text-blue-500 dark:focus:border-blue-600 dark:focus:text-blue-500',
-        ]">
-          Unirse a sala
-        </button>
-      </div>
+      <div class="card-body pt-7 gap-5">
+        <!-- Nombre del jugador -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text text-xs tracking-widest uppercase font-semibold opacity-60">Nombre del
+              jugador</span>
+          </label>
+          <input v-model="playerName" type="text" placeholder="Ej: María Félix"
+            class="input input-bordered w-full font-serif text-base" @keyup.enter="handleAction" />
+        </div>
 
-      <!-- Campo de código de sala (condicional) -->
-      <div v-if="action === 'join'" class="animate-fade-in space-y-2">
-        <label for="room" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Código de sala:
-        </label>
-        <input v-model="roomCode" type="text" id="room" required
-          class="block w-full rounded-lg border-gray-200 px-4 py-2.5 focus:border-blue-500 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 sm:py-3 sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:placeholder-gray-500 dark:focus:ring-gray-600"
-          placeholder="Ej: A1B2C3" />
-      </div>
+        <!-- Crear / Unirse -->
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" @click="action = 'create'" :class="[
+            'btn font-display text-sm tracking-wide',
+            action === 'create' ? 'btn-error text-white' : 'btn-ghost border border-base-300',
+          ]">
+            Crear sala
+          </button>
+          <button type="button" @click="action = 'join'" :class="[
+            'btn font-display text-sm tracking-wide',
+            action === 'join' ? 'btn-error text-white' : 'btn-ghost border border-base-300',
+          ]">
+            Unirse
+          </button>
+        </div>
 
-      <!-- Botón de enviar -->
-      <button type="submit" :disabled="!action"
-        class="btn btn-primary w-full">
-        Continuar
-      </button>
-
-      <!-- Mensaje de error -->
-      <div v-if="error" role="alert" class="alert alert-error">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ error }}</span>
-      </div>
-
-    </form>
-
-    <div class="mt-10">
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold">Salas disponibles</h2>
-        <p class="mt-2 text-sm">
-          Selecciona una sala para unirte o crea una nueva.
-        </p>
-      </div>
-
-      <div v-if="rooms.length === 0" class="rounded-lg">
-        <p>No hay salas disponibles en este momento</p>
-      </div>
-
-      <ul v-else class="space-y-3">
-        <li v-for="room in rooms" :key="room.room_code"
-          class="group flex cursor-pointer items-center justify-between rounded-lg border" @click="
-            () => {
-              roomCode = room.room_code
-              action = 'join'
-            }
-          ">
-          <div class="flex items-center">
-            <span class="font-mono font-medium">
-              {{ room.room_code }}
-            </span>
-            <span class="ml-3 rounded-full">
-              {{ room.length }} {{ room.length === 1 ? 'jugador' : 'jugadores' }}
-            </span>
+        <!-- Código de sala (condicional) -->
+        <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0">
+          <div v-if="action === 'join'" class="form-control">
+            <label class="label">
+              <span class="label-text text-xs tracking-widest uppercase font-semibold opacity-60">Código de sala</span>
+            </label>
+            <input v-model="roomCode" type="text" placeholder="Ej: A1B2C3"
+              class="input input-bordered w-full text-center font-display text-xl tracking-[0.2em] uppercase"
+              @keyup.enter="handleAction" />
           </div>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        </Transition>
+
+        <!-- Submit -->
+        <button type="button" @click="handleAction" :disabled="!canSubmit || isLoading"
+          class="btn btn-success text-white font-display tracking-widest text-sm w-full">
+          <span v-if="isLoading" class="loading loading-spinner loading-sm"></span>
+          {{ isLoading ? 'Conectando...' : 'Continuar →' }}
+        </button>
+
+        <!-- Error -->
+        <div v-if="error" role="alert" class="alert alert-error text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 stroke-current" fill="none"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Film Strip 2 -->
+    <FilmStrip :cartas="secondHalf" direction="reverse" class="mt-8" />
+
+    <!-- Salas disponibles -->
+    <div class="w-full max-w-md mt-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="flex-1 h-px bg-base-300" />
+        <h2 class="font-display text-lg font-bold">Salas activas</h2>
+        <div class="flex-1 h-px bg-base-300" />
+      </div>
+      <p class="text-center text-xs text-base-content/50 mb-4">Haz clic en una sala para unirte</p>
+
+      <div v-if="rooms.length === 0"
+        class="border border-dashed border-base-300 rounded-xl p-8 text-center text-base-content/40 text-sm">
+        No hay salas disponibles en este momento
+      </div>
+
+      <ul v-else class="space-y-2">
+        <li v-for="room in rooms" :key="room.code" @click="
+          () => {
+            roomCode = room.code
+            action = 'join'
+          }
+        "
+          class="flex items-center justify-between px-4 py-3 rounded-xl border border-base-200 bg-base-100 cursor-pointer hover:border-error hover:bg-base-200 transition-all group">
+          <div class="flex items-center gap-3">
+            <span class="font-display text-lg font-bold tracking-widest text-error">
+              {{ room.code }}
+            </span>
+            <span class="badge badge-ghost text-xs">
+              {{ room.playerCount }} {{ room.playerCount === 1 ? 'jugador' : 'jugadores' }}
+            </span>
+            <span v-if="room.winner" class="badge badge-warning text-xs">Finalizada</span>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 text-base-content/30 group-hover:text-error transition-colors" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
         </li>
       </ul>
     </div>
   </div>
-
-  <ul>
-    <li v-for="image in images" :key="image">
-      <img :src="image" :alt="`Imagen ${image.split('/').pop()}`" class="w-32 h-32 object-contain rounded-lg" />
-    </li>
-  </ul>
 </template>
 
-
-
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
-import api from '@/services/api'
-import { useAuthStore } from '@/modules/auth/stores/auth-store'
+import { useToastStore } from '@/stores'
 import { roomServices } from '../services/room-services'
+import FilmStrip from '../components/FilmStrip.vue'
+import { lotteryCards } from '../data/cards'
 
-const auth = useAuthStore()
+const router = useRouter()
+const store = useGameStore()
+const toast = useToastStore()
+const roomService = roomServices()
 
+const images = lotteryCards.map((card) => ({
+  image: card.image,
+  n: card.numero,
+}))
 
-const basePathImages = '/loteria'
-
-
-const images = Array.from({ length: 20 }, (_, i) => `${basePathImages}/${i + 1}.jpeg`)
+const half = Math.ceil(images.length / 2)
+const firstHalf = computed(() => images.slice(0, half))
+const secondHalf = computed(() => images.slice(half))
 
 const playerName = ref('')
 const roomCode = ref('')
 const action = ref<'create' | 'join' | null>(null)
 const error = ref('')
-const router = useRouter()
-const store = useGameStore()
+const isLoading = ref(false)
+const rooms = ref<any[]>([])
 
-const roomService = roomServices()
-
-const rooms = ref<
-  {
-    room_code: string
-    length: number
-  }[]
->([])
-
-onMounted(async () => {
-  try {
-    const res = await roomService.getAllRooms()
-    rooms.value = res.map((room: any) => ({
-      room_code: room.room_code,
-      length: room.players.length,
-    }))
-  } catch (err: any) {
-    console.error(err)
-    error.value = err.response?.data?.detail || 'Error al cargar las salas.'
-  }
+const canSubmit = computed(() => {
+  if (!playerName.value || !action.value) return false
+  if (action.value === 'join' && !roomCode.value) return false
+  return true
 })
 
-const URL = 'v1/games/lottery'
+onMounted(async () => {
+  await loadRooms()
+})
 
-const handleAction = async () => {
+async function loadRooms() {
+  try {
+    const data = await roomService.getAllRooms()
+    rooms.value = data
+  } catch (err: any) {
+    console.error('Error loading rooms:', err)
+  }
+}
+
+async function handleAction() {
+  if (!canSubmit.value || isLoading.value) return
+
   error.value = ''
+  isLoading.value = true
 
   try {
     if (action.value === 'create') {
-      const res = await api.post(`/${URL}/rooms`, { host_name: playerName.value })
-      store.roomCode = res.data.room.room_code
-      store.playerId = res.data.host_card.player_id
-      store.playerName = playerName.value
-      store.card = res.data.host_card.elements
-      store.drawnElements = res.data.room.drawn_elements || []
-      store.winner = res.data.room.winner?.player_name || null
-      store.isHost = true
-    } else if (action.value === 'join') {
-      const res = await api.post(URL + '/join', {
-        room_code: roomCode.value,
-        player_name: playerName.value,
+      const response = await roomService.createRoom(playerName.value)
+      store.initializeGame({
+        roomCode: response.roomCode,
+        playerId: response.playerId,
+        playerName: response.playerName,
+        isHost: response.isHost,
+        card: response.card,
+        players: [{ id: response.playerId, name: response.playerName }],
+        drawnCards: response.drawnCards || [],
       })
-      store.roomCode = roomCode.value
-      store.playerId = res.data.player_card.player_id
-      store.playerName = playerName.value
-      store.card = res.data.player_card.elements
-      store.isHost = false
-      store.drawnElements = res.data.room.drawn_elements || []
-      store.winner = res.data.room.winner?.player_name || null
-      console.log(store.winner)
-      console.log(store.drawnElements)
+      toast.show(`¡Sala creada! Código: ${response.roomCode}`, 'success')
+      router.push({ name: 'games.lottery.game' })
+    } else if (action.value === 'join') {
+      const response = await roomService.joinRoom(roomCode.value, playerName.value)
+      store.initializeGame({
+        roomCode: response.roomCode,
+        playerId: response.playerId,
+        playerName: response.playerName,
+        isHost: response.isHost,
+        card: response.card,
+        players: response.players,
+        drawnCards: response.drawnCards,
+      })
+      toast.show(`¡Unido a la sala ${response.roomCode}!`, 'success')
+      router.push({ name: 'games.lottery.game' })
     }
-
-    router.push({ name: 'games.lottery.game' })
   } catch (err: any) {
-    console.error(err)
-    error.value = err.response?.data?.detail || 'Error al conectar con el servidor.'
+    console.error('Error:', err)
+    error.value = err.response?.data?.error || err.message || 'Error al conectar con el servidor'
+    toast.show(error.value, 'error')
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
 
-<style>
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-shake {
-  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-5px);
-  }
-
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(5px);
-  }
-}
-</style>
+<style scoped></style>

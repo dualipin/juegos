@@ -1,11 +1,11 @@
 import api from '@/services/api'
 
-const baseUrl = 'v1/games/lottery/rooms'
+const baseUrl = 'v1/games/lottery'
 
 export const roomServices = () => {
   const getAllRooms = async () => {
     try {
-      const response = await api.get(baseUrl)
+      const response = await api.get(`${baseUrl}/rooms`)
       if (response.status === 200) {
         return response.data
       } else {
@@ -17,9 +17,9 @@ export const roomServices = () => {
     }
   }
 
-  const createRoom = async (name: string) => {
+  const createRoom = async (playerName: string) => {
     try {
-      const response = await api.post<string>(baseUrl, { name })
+      const response = await api.post<any>(`${baseUrl}/rooms`, { playerName })
       if (response.status === 201) {
         return response.data
       } else {
@@ -31,8 +31,41 @@ export const roomServices = () => {
     }
   }
 
+  const joinRoom = async (roomCode: string, playerName: string) => {
+    try {
+      const response = await api.post<any>(`${baseUrl}/rooms/join`, {
+        roomCode,
+        playerName,
+      })
+      if (response.status === 200) {
+        return response.data
+      } else {
+        throw new Error(`Failed to join room: ${response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Error joining room:', error)
+      throw error
+    }
+  }
+
+  const getRoom = async (roomCode: string) => {
+    try {
+      const response = await api.get<any>(`${baseUrl}/rooms/${roomCode}`)
+      if (response.status === 200) {
+        return response.data
+      } else {
+        throw new Error(`Failed to get room: ${response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Error getting room:', error)
+      throw error
+    }
+  }
+
   return {
     getAllRooms,
     createRoom,
+    joinRoom,
+    getRoom,
   }
 }
