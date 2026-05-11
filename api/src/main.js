@@ -31,9 +31,22 @@ setInterval(() => {
 // Almacenar conexiones activas por sala
 const roomConnections = new Map()
 
+// Configurar CORS para desarrollo y producción
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://juegos-macuspana.vercel.app',
+]
+
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (allowedOrigins.includes(origin) || !origin) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     credentials: true,
   })
 )
