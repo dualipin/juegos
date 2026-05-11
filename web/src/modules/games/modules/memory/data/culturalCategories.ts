@@ -16,7 +16,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'arquitectura',
     descripción: 'Centro histórico de Macuspana',
     hechoCurioso: 'El corazón de la comunidad donde se reúnen los pobladores para celebraciones y eventos importantes.',
-    imagen: '/src/modules/games/modules/memory/assets/img/parque-central.jpg',
+    imagen: '/memorama/parque-central.jpg',
     ícono: '🏛️',
   },
 
@@ -27,7 +27,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'naturaleza',
     descripción: 'Reserva ecológica imprescindible de Macuspana',
     hechoCurioso: 'Famosa por sus cascadas de agua cristalina y grutas naturales, es un santuario de biodiversidad macuspanense.',
-    imagen: '/src/modules/games/modules/memory/assets/img/cascadas.jpg',
+    imagen: '/memorama/cascadas.jpg',
     ícono: '💧',
   },
   {
@@ -36,7 +36,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'naturaleza',
     descripción: 'Formación geológica distinctive de Macuspana',
     hechoCurioso: 'Montaña emblemática visible desde el pueblo, forma parte de la identidad visual de Macuspana.',
-    imagen: '/src/modules/games/modules/memory/assets/img/tortuguero.jpg',
+    imagen: '/memorama/tortuguero.jpg',
     ícono: '⛰️',
   },
 
@@ -47,7 +47,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'gastronomía',
     descripción: 'Platillo tradicional emblematico de Macuspana',
     hechoCurioso: 'Pez endémico de las aguas de Macuspana, preparado a las brasas es una delicia culinaria única de la región.',
-    imagen: '/src/modules/games/modules/memory/assets/img/pejelagarto.jpg',
+    imagen: '/memorama/pejelagarto.jpg',
     ícono: '🐟',
   },
   {
@@ -56,7 +56,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'gastronomía',
     descripción: 'Bebida ancestral nutritiva de Macuspana',
     hechoCurioso: 'Bebida prehispánica que combina maíz molido con cacao, fundamental en la dieta tradicional macuspanense.',
-    imagen: '/src/modules/games/modules/memory/assets/img/pozol.jpg',
+    imagen: '/memorama/pozol.jpg',
     ícono: '☕',
   },
 
@@ -67,7 +67,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'fauna',
     descripción: 'Símbolo de la región acuática de Macuspana',
     hechoCurioso: 'Mamífero marino en peligro de extinción, emblema de la conservación ambiental de las aguas de Macuspana.',
-    imagen: '/src/modules/games/modules/memory/assets/img/manati.png',
+    imagen: '/memorama/manati.png',
     ícono: '🐳',
   },
 
@@ -78,7 +78,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'naturaleza',
     descripción: 'Actividad económica importante de Macuspana',
     hechoCurioso: 'Los extensos campos macuspanenses son el hogar de ganado criado con técnicas tradicionales y sostenibles.',
-    imagen: '/src/modules/games/modules/memory/assets/img/ganaderia.jpg',
+    imagen: '/memorama/ganaderia.jpg',
     ícono: '🐄',
   },
 
@@ -89,7 +89,7 @@ export const culturalCategories: CulturalCard[] = [
     categoría: 'fauna',
     descripción: 'Diversidad de aves propias de la región',
     hechoCurioso: 'Macuspana es hogar de diversas especies de aves tropicales, pilares de la biodiversidad local y atractivo para observadores de aves.',
-    imagen: '/src/modules/games/modules/memory/assets/img/aves.jpg',
+    imagen: '/memorama/aves.jpg',
     ícono: '🦅',
   },
 ]

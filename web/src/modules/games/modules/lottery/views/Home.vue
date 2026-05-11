@@ -125,7 +125,7 @@ import { roomServices } from '../services/room-services'
 const auth = useAuthStore()
 
 
-const basePathImages = '/src/modules/games/modules/lottery/assets/img'
+const basePathImages = '/loteria'
 
 
 const images = Array.from({ length: 20 }, (_, i) => `${basePathImages}/${i + 1}.jpeg`)
