@@ -53,6 +53,11 @@
           <button @click="resetGame" class="btn btn-ghost btn-sm flex-1 sm:flex-none">
             Reiniciar
           </button>
+          <!-- Botón de Audio -->
+          <button @click="toggleMusic" class="btn btn-circle btn-sm" :class="isMusicPlaying ? 'btn-primary' : 'btn-ghost'">
+            <span v-if="isMusicPlaying">🔊</span>
+            <span v-else>🔇</span>
+          </button>
         </div>
       </div>
 
@@ -159,10 +164,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import JSConfetti from 'js-confetti'
 import { useMemoryGame } from '../composables/useMemoryGame'
 import plataformaPetrolera from '../assets/plataforma-petrolera.png'
+import cancion from '../assets/cancion.mp3'
 
 const {
   initializeGame,
@@ -181,6 +187,20 @@ const {
   theme,
   timeLeft,
 } = useMemoryGame()
+
+// Audio
+const isMusicPlaying = ref(false)
+const audio = new Audio(cancion)
+audio.loop = true
+
+const toggleMusic = () => {
+  if (isMusicPlaying.value) {
+    audio.pause()
+  } else {
+    audio.play().catch(e => console.log('Autoplay blocked, waiting for interaction', e))
+  }
+  isMusicPlaying.value = !isMusicPlaying.value
+}
 
 // Definir niveles de dificultad
 const difficulties = {
@@ -234,6 +254,17 @@ onMounted(() => {
     elementsCount: difficulty.cards,
     duration: difficulty.time,
   })
+
+  // Intentar reproducir música al inicio
+  audio.play().then(() => {
+    isMusicPlaying.value = true
+  }).catch(() => {
+    console.log('Esperando interacción del usuario para reproducir música')
+  })
+})
+
+onUnmounted(() => {
+  audio.pause()
 })
 </script>
 

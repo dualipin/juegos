@@ -1,20 +1,20 @@
 <template>
-  <ScreenDanger />
+  <!-- <ScreenDanger /> -->
 
-  <div class="pt-5 text-center">
+  <div class="pt-16 pb-10 text-center">
     <!-- Título principal con animación -->
     <div class="animate-fade-in mb-2">
       <h1
         class="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
       >
-        <span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-          Química Snake
+        <span class="bg-linear-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent">
+          La Bejuquilla
         </span>
       </h1>
 
       <!-- Subtítulo con efecto de máquina de escribir -->
-      <h2 class="typewriter mt-2 text-xl font-medium text-gray-700 md:text-2xl dark:text-gray-300">
-        Culebrita Atómica
+      <h2 class="typewriter mt-2 text-xl font-medium text-emerald-700 md:text-2xl dark:text-emerald-400">
+        Depredadora de la Selva 🐍
       </h2>
     </div>
 
@@ -24,85 +24,63 @@
         <GameBoard />
       </div>
 
-      <!-- Sección de compuestos -->
+      <!-- Sección de Instrucciones (Selva) -->
       <div
-        class="animate-fade-in w-full max-w-7xl rounded-xl border border-gray-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50 dark:shadow-2xl"
+        class="animate-fade-in w-full max-w-4xl rounded-xl border border-emerald-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:shadow-2xl"
       >
         <h2
-          class="mb-4 flex items-center justify-center gap-2 text-2xl font-bold text-gray-900 dark:text-white"
+          class="mb-4 flex items-center justify-center gap-2 text-2xl font-bold text-emerald-900 dark:text-emerald-100"
         >
-          <FlaskRoundIcon class="h-6 w-6 text-cyan-500 dark:text-cyan-400" />
-          Compuestos para formar
-          <WandSparklesIcon class="h-6 w-6 text-amber-500 dark:text-amber-400" />
+          <LeafIcon class="h-6 w-6 text-emerald-500" />
+          ¿Cómo sobrevivir?
+          <BirdIcon class="h-6 w-6 text-amber-500" />
         </h2>
 
-        <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-300">
-          Cada nivel te pide formar un compuesto específico. Si tomas un elemento que no pertenece
-          al compuesto objetivo o chocas contigo mismo, pierdes.
-        </p>
-
-        <ul class="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <li
-            v-for="compuesto in compuestos"
-            :key="compuesto.nombre"
-            class="compuesto-formar group rounded-lg bg-gray-100/80 p-4 transition-all duration-200 hover:bg-gray-200/90 dark:bg-gray-700/40 dark:hover:bg-gray-700/60"
-          >
-            <div class="mb-1 font-semibold text-gray-900 dark:text-white">
-              {{ compuesto.nombre }}
-            </div>
-            <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">{{ compuesto.formula }}</div>
-
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="elemento in compuesto.elementos"
-                :key="elemento"
-                class="compuesto-elemento flex items-center justify-center rounded-full px-2 py-1 text-xs font-bold"
-                :class="getElementColor(elemento)"
-              >
-                {{ elemento }}
-              </span>
-            </div>
-          </li>
-        </ul>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div class="flex flex-col items-center p-4 rounded-lg bg-emerald-50 dark:bg-emerald-800/20">
+            <span class="text-4xl mb-2">🐭🐸🐦</span>
+            <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+              Caza ratones, ranas y aves para crecer y ganar puntos.
+            </p>
+          </div>
+          <div class="flex flex-col items-center p-4 rounded-lg bg-rose-50 dark:bg-rose-800/20">
+            <span class="text-4xl mb-2">🔪</span>
+            <p class="text-sm font-semibold text-rose-800 dark:text-rose-200">
+              ¡Evita los cuchillos! Un roce y la partida termina.
+            </p>
+          </div>
+          <div class="flex flex-col items-center p-4 rounded-lg bg-amber-50 dark:bg-amber-800/20">
+            <span class="text-4xl mb-2">📱</span>
+            <p class="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              Usa las flechas o los controles en pantalla para moverte.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <!-- Ranking -->
+      <!-- Ranking
       <div class="mt-8 w-full max-w-2xl">
         <RankingGlobal game="snake" ref="rankingRef" />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { onMounted } from 'vue'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import GameBoard from '../components/GameBoard.vue'
-import { compuestos } from '../data/compounds'
-import { FlaskRoundIcon, WandSparklesIcon } from 'lucide-vue-next'
+import { LeafIcon, BirdIcon } from 'lucide-vue-next'
 import ScreenDanger from '../components/ScreenDanger.vue'
 import RankingGlobal from '@/modules/games/components/RankingGlobal.vue'
-import { rankingServices } from '@/modules/games/services/ranking-services'
+import { useSnakeGame } from '../composables/useSnakeGame'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const getElementColor = (element: string) => {
-  const colors: Record<string, string> = {
-    H: 'bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700/50',
-    O: 'bg-red-100 text-red-600 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700/50',
-    C: 'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700/50',
-    N: 'bg-emerald-100 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700/50',
-    Cl: 'bg-green-100 text-green-600 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700/50',
-    Na: 'bg-amber-100 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700/50',
-  }
-  return (
-    colors[element] ||
-    'bg-purple-100 text-purple-600 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700/50'
-  )
-}
+const { rankingRef } = useSnakeGame()
 
-// Animación de máquina de escribir
+// Animaciones GSAP
 onMounted(() => {
   gsap.from('.typewriter', {
     duration: 2,
@@ -111,7 +89,6 @@ onMounted(() => {
     delay: 0.5,
   })
 
-  // Animación de entrada para el título principal
   gsap.from('.animate-fade-in', {
     duration: 1,
     opacity: 0,
@@ -120,7 +97,6 @@ onMounted(() => {
     stagger: 0.2,
   })
 
-  // Animación de entrada para el tablero de juego
   gsap.from('.animate-slide-up', {
     duration: 0.5,
     opacity: 0,
@@ -128,23 +104,13 @@ onMounted(() => {
     ease: 'power2.out',
     delay: 0.3,
   })
-
-  // Animación para los elementos de la lista
-  gsap.from('.compuesto-elemento', {
-    scrollTrigger: {
-      trigger: '.compuesto-formar',
-      start: 'top 80%',
-      toggleActions: 'play none none reverse',
-    },
-    opacity: 0,
-    y: 20,
-    stagger: 0.1,
-    duration: 0.6,
-    ease: 'back.out',
-  })
 })
-
-// Ranking: enviar score al terminar (ganar o perder) y refrescar lista
-import { useSnakeGame } from '../composables/useSnakeGame'
-const { puntuacion, juegoGanado, juegoPerdido, rankingRef, sendRanking, user } = useSnakeGame()
 </script>
+
+<style scoped>
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0 auto;
+}
+</style>

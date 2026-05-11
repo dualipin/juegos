@@ -1,7 +1,5 @@
 import { ref, onUnmounted, computed } from 'vue'
 import { useToastStore } from '@/stores'
-import { elementos } from '../data/elements'
-import { compuestos } from '../data/compounds'
 import { rankingServices } from '@/modules/games/services/ranking-services'
 import { useAuthStore } from '@/modules/auth/stores/auth-store'
 import { useSnakeStore } from '../stores/snake-store'
@@ -19,272 +17,216 @@ export function useSnakeGame() {
   const snakeStore = useSnakeStore()
   const snake = ref<Position[]>([{ x: 10, y: 10 }])
   const direction = ref<Direction>('right')
+  const nextDirection = ref<Direction>('right')
   const interval = ref<number | null>(null)
 
-  // Alimentos en el tablero
-  const comidas = ref<{ position: Position; simbolo: string }[]>([])
-  const elementosRecolectados = ref<string[]>([])
+  // Alimentos y Obstáculos
+  const foodEmojis = ['🐭', '🐸', '🐦']
+  const comidas = ref<{ position: Position; emoji: string }[]>([])
+  const cuchillos = ref<Position[]>([])
 
-  // Progresión por niveles (cada nivel es un compuesto objetivo)
-  const nivel = ref(0)
-  const maxLevels = Math.min(compuestos.length, 10) // ajusta el límite si quieres un subconjunto
-  const objetivo = computed(() => compuestos[nivel.value])
-  const requeridos = computed(() => {
-    const map = new Map<string, number>()
-    objetivo.value.elementos.forEach((s) => map.set(s, (map.get(s) || 0) + 1))
-    return map
-  })
-  const recolectadosPorElemento = ref<Map<string, number>>(new Map())
+  const puntuacion = ref(0)
   const juegoGanado = ref(false)
   const juegoPerdido = ref(false)
+  const gameStarted = ref(false)
 
-  // Generar comidas con mezcla de válidos y distractores
-  function generateComidas(cantidad: number, proporcionValidos = 0.6) {
-    const nuevas: { position: Position; simbolo: string }[] = []
-    const validos = Array.from(requeridos.value.keys())
-    const distractores = elementos.map((e) => e.simbolo).filter((s) => !requeridos.value.has(s))
-
+  // Generar comida aleatoria
+  function generateFood(cantidad: number) {
+    const nuevas: { position: Position; emoji: string }[] = []
     for (let i = 0; i < cantidad; i++) {
-      const x = Math.floor(Math.random() * gridSize)
-      const y = Math.floor(Math.random() * gridSize)
-      const usarValido =
-        (Math.random() < proporcionValidos && validos.length > 0) || distractores.length === 0
-      const pool = usarValido && validos.length ? validos : distractores
-      const simbolo = pool[Math.floor(Math.random() * pool.length)]
-      nuevas.push({ position: { x, y }, simbolo })
+      let x, y, occupies
+      do {
+        x = Math.floor(Math.random() * gridSize)
+        y = Math.floor(Math.random() * gridSize)
+        occupies = snake.value.some(s => s.x === x && s.y === y) || 
+                   comidas.value.some(c => c.position.x === x && c.position.y === y) ||
+                   cuchillos.value.some(k => k.x === x && k.y === y)
+      } while (occupies)
+      
+      const emoji = foodEmojis[Math.floor(Math.random() * foodEmojis.length)]
+      nuevas.push({ position: { x, y }, emoji })
     }
     return nuevas
   }
 
+  // Generar cuchillos
+  function generateKnife() {
+    let x, y, occupies
+    do {
+      x = Math.floor(Math.random() * gridSize)
+      y = Math.floor(Math.random() * gridSize)
+      occupies = snake.value.some(s => s.x === x && s.y === y) || 
+                 comidas.value.some(c => c.position.x === x && c.position.y === y) ||
+                 cuchillos.value.some(k => k.x === x && k.y === y)
+    } while (occupies)
+    cuchillos.value.push({ x, y })
+  }
+
   const moveSnake = async () => {
+    direction.value = nextDirection.value
     const head = { ...snake.value[0] }
 
     switch (direction.value) {
-      case 'up':
-        head.y -= 1
-        break
-      case 'down':
-        head.y += 1
-        break
-      case 'left':
-        head.x -= 1
-        break
-      case 'right':
-        head.x += 1
-        break
+      case 'up': head.y -= 1; break
+      case 'down': head.y += 1; break
+      case 'left': head.x -= 1; break
+      case 'right': head.x += 1; break
     }
 
     // Colisión con bordes
     if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) {
-      stopGame()
-      toast.show('Chocaste con el borde. Fin del juego.', 'error')
-      juegoPerdido.value = true
+      gameOver('¡Chocaste con el borde!')
       return
     }
 
     // Colisión con sí misma
-    const colisionaConSiMisma = snake.value.some((seg) => seg.x === head.x && seg.y === head.y)
-    if (colisionaConSiMisma) {
-      stopGame()
-      toast.show('Choque contigo mismo. Fin del juego.', 'error')
-      juegoPerdido.value = true
+    if (snake.value.some((seg) => seg.x === head.x && seg.y === head.y)) {
+      gameOver('¡Te mordiste a ti mismo!')
+      return
+    }
+
+    // Colisión con cuchillos
+    if (cuchillos.value.some(k => k.x === head.x && k.y === head.y)) {
+      gameOver('¡Cuidado con el cuchillo! Perdiste.')
       return
     }
 
     // Colisión con comida
-    const comidaIndex = comidas.value.findIndex(
+    const foodIndex = comidas.value.findIndex(
       (c) => c.position.x === head.x && c.position.y === head.y,
     )
 
-    if (comidaIndex !== -1) {
-      const simbolo = comidas.value[comidaIndex].simbolo
-
-      // Validación de elemento según objetivo del nivel
-      if (!requeridos.value.has(simbolo)) {
-        stopGame()
-        toast.show('Elemento incorrecto para el compuesto objetivo. Fin del juego.', 'error')
-        juegoPerdido.value = true
-        return
-      }
-
+    if (foodIndex !== -1) {
+      puntuacion.value += 10
       snake.value.unshift(head)
-      elementosRecolectados.value.push(simbolo)
-
-      // Actualizar conteo por elemento
-      const nuevoMapa = new Map(recolectadosPorElemento.value)
-      nuevoMapa.set(simbolo, (nuevoMapa.get(simbolo) || 0) + 1)
-      recolectadosPorElemento.value = nuevoMapa
-
-      // Reponer comida
-      comidas.value.splice(comidaIndex, 1)
-      comidas.value.push(...generateComidas(1))
-
-      await verificarCompuesto()
+      comidas.value.splice(foodIndex, 1)
+      comidas.value.push(...generateFood(1))
+      
+      // Cada 50 puntos agregamos un cuchillo extra para subir dificultad
+      if (puntuacion.value % 50 === 0) {
+        generateKnife()
+        toast.show('¡Más peligro en la selva! Apareció un cuchillo.', 'warning')
+      }
+      
+      checkAchievements()
     } else {
       snake.value.unshift(head)
       snake.value.pop()
     }
   }
 
-  const changeDirection = (e: KeyboardEvent) => {
-    switch (e.key) {
-      case 'ArrowUp':
-        if (direction.value !== 'down') direction.value = 'up'
-        break
-      case 'ArrowDown':
-        if (direction.value !== 'up') direction.value = 'down'
-        break
-      case 'ArrowLeft':
-        if (direction.value !== 'right') direction.value = 'left'
-        break
-      case 'ArrowRight':
-        if (direction.value !== 'left') direction.value = 'right'
-        break
-    }
+  const gameOver = (message: string) => {
+    stopGame()
+    toast.show(message, 'error')
+    juegoPerdido.value = true
+    submitScore()
   }
 
-  const compuestoFormado = ref<string | null>(null)
-
-  const puntuacion = ref(0)
-
-  async function verificarCompuesto() {
-    // ¿Se cumplieron todos los requeridos del nivel actual?
-    const completo = Array.from(requeridos.value.entries()).every(([simbolo, cant]) => {
-      return (recolectadosPorElemento.value.get(simbolo) || 0) >= cant
-    })
-
-    if (completo) {
-      compuestoFormado.value = `${objetivo.value.nombre} (${objetivo.value.formula})`
-
-      // Puntaje por elementos del compuesto
-      puntuacion.value += objetivo.value.elementos.length * 10
-
-      // Recompensas por hitos
-      const formedCount = nivel.value + 1
-      if (formedCount === 1) snakeStore.addReward('Primer compuesto')
-      if (formedCount === 3) {
-        snakeStore.addReward('Tríada atómica')
-        snakeStore.unlockSkin('quantum')
-        toast.show('Skin Quantum desbloqueada', 'success')
+  const submitScore = async () => {
+    try {
+      const ranking = {
+        name: 'snake',
+        user: Number(user.user!.id),
+        score: puntuacion.value,
+        username: user.user!.full_name,
       }
-      if (formedCount === 5) {
-        snakeStore.addReward('Maestro molecular')
-        snakeStore.unlockSkin('molecular')
-        toast.show('Skin Molecular desbloqueada', 'success')
-      }
-      if (formedCount === 7) {
-        snakeStore.addReward('Colector estelar')
-        snakeStore.unlockFoodCosmetic('orb')
-        toast.show('Cosmético de comida "Orb" desbloqueado', 'success')
-      }
-
-      toast.show(`Compuesto formado: ${objetivo.value.nombre}`, 'success')
-
-      try {
-        const ranking = {
-          name: 'snake',
-          user: Number(user.user!.id),
-          score: puntuacion.value,
-          username: user.user!.full_name,
-        }
-        await sendRanking(ranking)
-      } catch (err) {
-        console.error('Error al enviar ranking de snake:', err)
-      }
-
+      await sendRanking(ranking)
       if (rankingRef.value) rankingRef.value.loadRanking()
-
-      // juegoGanado.value = false
-      // juegoPerdido.value = false
-
-      // Último nivel => ganar
-      if (nivel.value >= maxLevels - 1) {
-        stopGame()
-        juegoGanado.value = true
-        toast.show('¡Ganaste! Completaste todos los niveles.', 'success')
-        // Skin legendaria por completar campaña
-        snakeStore.addReward('Leyenda de la Química')
-        snakeStore.unlockSkin('legendary')
-        return
-      }
-
-      // Avanzar de nivel tras breve pausa visual
-      setTimeout(() => {
-        nivel.value += 1
-  // Reiniciar estado del nivel (manteniendo el tamaño actual de la serpiente)
-  elementosRecolectados.value = []
-  recolectadosPorElemento.value = new Map()
-  // La serpiente conserva su longitud acumulada; sólo se limpian las comidas
-  // Refrescar comidas para el nuevo objetivo
-        comidas.value = generateComidas(5)
-        compuestoFormado.value = null
-      }, 300)
+    } catch (err) {
+      console.error('Error al enviar ranking:', err)
     }
   }
 
-  const intervalComida = ref<number | null>(null)
+  const checkAchievements = () => {
+    if (puntuacion.value === 100) {
+      snakeStore.addReward('Cazador de la Selva')
+      snakeStore.unlockSkin('quantum')
+      toast.show('Skin Quantum desbloqueada', 'success')
+    }
+    if (puntuacion.value === 300) {
+      snakeStore.addReward('Depredador Ápice')
+      snakeStore.unlockSkin('molecular')
+      toast.show('Skin Molecular desbloqueada', 'success')
+    }
+    if (puntuacion.value === 500) {
+      snakeStore.addReward('Leyenda de la Bejuquilla')
+      snakeStore.unlockSkin('legendary')
+      toast.show('Skin Legendaria desbloqueada', 'success')
+    }
+  }
+
+  const setDirection = (newDir: Direction) => {
+    const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' }
+    if (newDir !== opposites[direction.value]) {
+      nextDirection.value = newDir
+    }
+  }
+
+  const handleKeydown = (e: KeyboardEvent) => {
+    switch (e.key) {
+      case 'ArrowUp': setDirection('up'); break
+      case 'ArrowDown': setDirection('down'); break
+      case 'ArrowLeft': setDirection('left'); break
+      case 'ArrowRight': setDirection('right'); break
+    }
+  }
 
   const startGame = () => {
+    gameStarted.value = true
     juegoPerdido.value = false
-    if (juegoGanado.value) return
-    if (!interval.value) interval.value = setInterval(moveSnake, 200)
-    if (!intervalComida.value)
-      intervalComida.value = setInterval(() => {
-        // Mantener un límite de comidas en tablero
-        if (comidas.value.length < 15) {
-          comidas.value.push(...generateComidas(2))
-        }
-      }, 5000)
-
-    window.addEventListener('keydown', changeDirection)
-    if (comidas.value.length === 0) comidas.value = generateComidas(5)
+    juegoGanado.value = false
+    if (!interval.value) {
+      // Velocidad base
+      interval.value = setInterval(moveSnake, 150)
+    }
+    window.addEventListener('keydown', handleKeydown)
+    if (comidas.value.length === 0) {
+      comidas.value = generateFood(3)
+      cuchillos.value = []
+      generateKnife()
+    }
   }
 
   const stopGame = () => {
     if (interval.value) clearInterval(interval.value)
-    if (intervalComida.value) clearInterval(intervalComida.value)
-    window.removeEventListener('keydown', changeDirection)
+    window.removeEventListener('keydown', handleKeydown)
     interval.value = null
-    intervalComida.value = null
   }
 
   const resetGame = () => {
+    stopGame()
+    gameStarted.value = false
     snake.value = [{ x: 10, y: 10 }]
     direction.value = 'right'
-    elementosRecolectados.value = []
-    recolectadosPorElemento.value = new Map()
-    compuestoFormado.value = null
+    nextDirection.value = 'right'
     puntuacion.value = 0
-    nivel.value = 0
     comidas.value = []
+    cuchillos.value = []
     juegoGanado.value = false
     juegoPerdido.value = false
-    stopGame()
+    
+    // Cerrar modal de game over
+    const modalGameOver = document.getElementById('modal_game_over') as HTMLDialogElement
+    modalGameOver?.close()
   }
+
   const rankingRef = ref<InstanceType<typeof RankingGlobal>>()
 
   onUnmounted(stopGame)
 
   return {
     snake,
-    elementosRecolectados,
     gridSize,
-    compuestoFormado,
     puntuacion,
     startGame,
     stopGame,
     resetGame,
     comidas,
-    nivel,
-    objetivo,
-    requeridos,
-    recolectadosPorElemento,
+    cuchillos,
     juegoGanado,
-    maxLevels,
-    // Ranking helpers
-    sendRanking,
-    user,
     juegoPerdido,
+    gameStarted,
+    setDirection,
     snakeStore,
     rankingRef,
   }

@@ -1,11 +1,11 @@
 <template>
   <div class="relative flex flex-col items-center justify-center p-4">
-    <!-- Partículas de fondo -->
-  <div class="pointer-events-none absolute inset-0">
+    <!-- Partículas de fondo (Selva) -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-    v-for="i in particleCount"
+        v-for="i in particleCount"
         :key="i"
-        class="particle absolute rounded-full bg-blue-400/50 dark:bg-blue-500/50"
+        class="particle absolute rounded-full bg-emerald-400/30 dark:bg-emerald-600/20"
       ></div>
     </div>
 
@@ -14,24 +14,29 @@
       <!-- Tablero de juego -->
       <div class="relative">
         <div
-          class="game-board rounded-xl border border-gray-300/50 bg-white/80 p-1 shadow-2xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50"
+          class="game-board rounded-xl border-4 border-amber-900/50 bg-emerald-50/90 p-1 shadow-2xl backdrop-blur-sm dark:border-amber-700/50 dark:bg-emerald-950/50"
         >
           <div v-for="y in gridSize" :key="y" class="row flex">
             <div
               v-for="x in gridSize"
               :key="x"
-              class="cell flex h-6 w-6 items-center justify-center border-gray-300/50 transition-all duration-200 sm:h-8 sm:w-8 dark:border-gray-700/30"
+              class="cell flex h-[13px] w-[13px] sm:h-6 sm:w-6 md:h-8 md:w-8 items-center justify-center border border-emerald-200/20 transition-all duration-200 dark:border-emerald-800/20"
               :class="[
                 isSnake(x - 1, y - 1) ? snakeCellClass : '',
-                { 'scale-110': isFood(x - 1, y - 1) },
+                { 'scale-110': isFood(x - 1, y - 1) || isKnife(x - 1, y - 1) },
               ]"
             >
               <span
                 v-if="isFood(x - 1, y - 1)"
-                class="food-icon animate-pulse text-lg font-bold"
-                :style="{ color: getFoodColor(x - 1, y - 1) }"
+                class="food-icon animate-bounce text-[10px] sm:text-base md:text-xl"
               >
-                {{ renderFood(x - 1, y - 1) }}
+                {{ getFoodEmoji(x - 1, y - 1) }}
+              </span>
+              <span
+                v-if="isKnife(x - 1, y - 1)"
+                class="knife-icon animate-pulse text-[10px] sm:text-base md:text-xl"
+              >
+                🔪
               </span>
             </div>
           </div>
@@ -41,153 +46,118 @@
         <div
           class="animate-border pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
         ></div>
+
+        <!-- Controles Móviles (D-Pad) -->
+        <div class="mt-8 flex flex-col items-center justify-center md:hidden">
+          <!-- Fila superior -->
+          <button 
+            @click="setDirection('up')" 
+            class="mb-1 flex h-16 w-16 items-center justify-center rounded-t-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
+          >
+            <ChevronUpIcon class="h-8 w-8" />
+          </button>
+          
+          <!-- Fila central -->
+          <div class="flex gap-1">
+            <button 
+              @click="setDirection('left')" 
+              class="flex h-16 w-16 items-center justify-center rounded-l-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
+            >
+              <ChevronLeftIcon class="h-8 w-8" />
+            </button>
+            <div class="h-16 w-16 bg-emerald-700/40 rounded-xl shadow-inner flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <span class="text-2xl font-bold">◆</span>
+            </div>
+            <button 
+              @click="setDirection('right')" 
+              class="flex h-16 w-16 items-center justify-center rounded-r-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
+            >
+              <ChevronRightIcon class="h-8 w-8" />
+            </button>
+          </div>
+          
+          <!-- Fila inferior -->
+          <button 
+            @click="setDirection('down')" 
+            class="mt-1 flex h-16 w-16 items-center justify-center rounded-b-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
+          >
+            <ChevronDownIcon class="h-8 w-8" />
+          </button>
+        </div>
       </div>
 
       <!-- Panel de información -->
       <div
-        class="info-panel w-full max-w-md rounded-xl border border-gray-300/50 bg-white/80 p-6 shadow-2xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50"
+        class="info-panel w-full max-w-md rounded-xl border border-amber-200/50 bg-white/80 p-6 shadow-2xl backdrop-blur-sm dark:border-amber-900/50 dark:bg-gray-900/80"
       >
         <div class="space-y-6">
+          <!-- Puntuación -->
+          <div class="rounded-lg bg-emerald-100/70 p-4 dark:bg-emerald-900/30">
+            <h3 class="mb-1 text-sm font-semibold tracking-wider text-emerald-800 uppercase dark:text-emerald-300">
+              Puntuación
+            </h3>
+            <p class="text-4xl font-black text-emerald-900 dark:text-emerald-100">{{ puntuacion }}</p>
+          </div>
+
           <!-- Skins -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
+          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-800/50">
             <h3 class="mb-2 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
               Apariencia
             </h3>
-      <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2">
               <button
                 v-for="skin in snakeStore.unlockedSkins"
                 :key="skin"
                 @click="snakeStore.selectSkin(skin)"
-        class="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm capitalize transition"
+                class="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm capitalize transition"
                 :class="skinButtonClass(skin)"
               >
-        <span class="inline-block h-3 w-3 rounded-sm" :class="skinSwatchClass(skin)"></span>
+                <span class="inline-block h-3 w-3 rounded-sm" :class="skinSwatchClass(skin)"></span>
                 {{ skin }}
               </button>
             </div>
           </div>
-          <!-- Objetivo del nivel -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
-            <div class="mb-2 flex items-center justify-between">
-              <h3
-                class="text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300"
-              >
-                Nivel {{ nivel + 1 }}
-              </h3>
-              <span class="text-xs text-gray-600 dark:text-gray-300">Objetivo</span>
-            </div>
-            <p class="text-lg font-bold text-gray-900 dark:text-white">
-              {{ objetivo.nombre }}
-              <span class="text-gray-600 dark:text-gray-300">({{ objetivo.formula }})</span>
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <span
-                v-for="(cnt, simb) in requeridosObjeto"
-                :key="simb"
-                class="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold shadow-sm dark:bg-gray-900/40 dark:text-gray-200"
-              >
-                {{ simb }} {{ progresoElemento(simb) }}/{{ cnt }}
-              </span>
-            </div>
-          </div>
-          <!-- Cosméticos de comida -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
-            <h3 class="mb-2 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
-              Cosméticos de comida
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="c in snakeStore.unlockedFoodCosmetics"
-                :key="c"
-                @click="snakeStore.selectFoodCosmetic(c)"
-                class="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm capitalize transition"
-                :class="foodButtonClass(c)"
-              >
-                <span class="text-base">{{ previewFoodIcon(c) }}</span>
-                {{ c }}
-              </button>
-            </div>
-          </div>
+
           <!-- Controles -->
           <div class="grid grid-cols-2 gap-3">
             <button
               @click="startGame"
-              class="flex transform items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-emerald-500 active:scale-95"
+              class="flex transform items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-emerald-500 active:scale-95"
             >
-              <span class="flex items-center justify-center gap-2">
-                <PlayCircleIcon class="h-5 w-5" />
-                Iniciar
-              </span>
+              <PlayCircleIcon class="h-5 w-5" />
+              INICIAR
             </button>
             <button
               @click="stopGame"
-              class="flex transform items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-indigo-500 active:scale-95"
+              class="flex transform items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-amber-500 active:scale-95"
             >
-              <span class="flex items-center justify-center gap-2">
-                <PauseCircleIcon class="h-5 w-5" />
-                Pausar
-              </span>
+              <PauseCircleIcon class="h-5 w-5" />
+              PAUSAR
             </button>
             <button
               @click="resetGame"
-              class="col-span-2 flex transform items-center justify-center rounded-lg bg-rose-600 px-4 py-2 font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-rose-500 active:scale-95"
+              class="col-span-2 flex transform items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-rose-500 active:scale-95"
             >
-              <span class="flex items-center justify-center gap-2">
-                <RefreshCwIcon class="h-5 w-5" />
-                Reiniciar
-              </span>
+              <RefreshCwIcon class="h-5 w-5" />
+              REINICIAR
             </button>
           </div>
 
-          <!-- Puntuación -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
-            <h3
-              class="mb-2 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300"
-            >
-              Puntuación
-            </h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ puntuacion }}</p>
-          </div>
-
-          <!-- Elementos recolectados -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
-            <h3
-              class="mb-3 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300"
-            >
-              Elementos recolectados
-            </h3>
-            <div class="flex min-h-12 flex-wrap gap-2">
-              <span
-                v-for="(el, index) in elementosRecolectados"
-                :key="index"
-                class="flex items-center gap-1 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 px-3 py-1 text-sm font-bold text-white shadow-md"
-              >
-                {{ el }}
-              </span>
-              <span
-                v-if="elementosRecolectados.length === 0"
-                class="text-sm text-gray-500 dark:text-gray-400"
-              >
-                Ningún elemento recolectado
-              </span>
-            </div>
-          </div>
-
           <!-- Recompensas -->
-          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-700/50">
+          <div class="rounded-lg bg-gray-200/70 p-4 dark:bg-gray-800/50">
             <h3 class="mb-3 text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
-              Recompensas
+              Logros en la Selva
             </h3>
             <div class="flex min-h-10 flex-wrap gap-2">
               <span
                 v-for="r in snakeStore.rewards"
                 :key="r"
-                class="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-200"
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
               >
-                🏅 {{ r }}
+                🏆 {{ r }}
               </span>
               <span v-if="snakeStore.rewards.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
-                Aún no hay recompensas
+                ¡Aún no has logrado nada!
               </span>
             </div>
           </div>
@@ -195,35 +165,11 @@
       </div>
     </div>
 
-    <!-- Notificación de compuesto formado -->
-    <transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform scale-95 opacity-0"
-      enter-to-class="transform scale-100 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="transform scale-100 opacity-100"
-      leave-to-class="transform scale-95 opacity-0"
-    >
-      <div
-        v-if="compuestoFormado"
-        class="animate-float fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 px-6 py-4 text-white shadow-xl"
-      >
-        <SparklesIcon class="h-6 w-6 flex-shrink-0" />
-        <div>
-          <h4 class="text-lg font-bold">¡Compuesto formado!</h4>
-          <p class="text-sm">{{ compuestoFormado }}</p>
-        </div>
-      </div>
-    </transition>
-
     <!-- Banner de victoria -->
     <transition
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="transform scale-95 opacity-0"
       enter-to-class="transform scale-100 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="transform scale-100 opacity-100"
-      leave-to-class="transform scale-95 opacity-0"
     >
       <div
         v-if="juegoGanado"
@@ -232,51 +178,166 @@
         <div class="flex items-start gap-3">
           <SparklesIcon class="mt-1 h-6 w-6 flex-shrink-0" />
           <div class="flex-1">
-            <h4 class="text-lg font-extrabold">¡Has ganado!</h4>
+            <h4 class="text-lg font-extrabold">¡Victoria Legendaria!</h4>
             <p class="text-sm opacity-90">
-              Completaste todos los niveles. Presiona Reiniciar para jugar de nuevo.
+              Has dominado la selva. ¡La Bejuquilla es imbatible!
             </p>
           </div>
         </div>
       </div>
     </transition>
+
+    <!-- Modal Mobile: Inicio del juego -->
+    <dialog id="modal_game_start" class="modal md:hidden">
+      <div class="modal-box bg-emerald-50 dark:bg-emerald-950">
+        <div class="mb-4 text-center">
+          <h2 class="mb-2 text-3xl font-bold text-emerald-900 dark:text-emerald-100">
+            🐍 La Bejuquilla
+          </h2>
+          <p class="text-sm text-emerald-700 dark:text-emerald-300">
+            Depredadora de la Selva
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="rounded-lg bg-white/50 p-3 dark:bg-emerald-900/30">
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              🐭 <span class="ml-2">Caza ratones, ranas y aves</span>
+            </p>
+          </div>
+          <div class="rounded-lg bg-white/50 p-3 dark:bg-emerald-900/30">
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              🔪 <span class="ml-2">Evita los cuchillos</span>
+            </p>
+          </div>
+          <div class="rounded-lg bg-white/50 p-3 dark:bg-emerald-900/30">
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              📱 <span class="ml-2">Usa los controles en pantalla</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-action mt-6">
+          <form method="dialog" class="w-full">
+            <button
+              @click="startGame"
+              class="btn btn-primary w-full bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              <PlayCircleIcon class="h-5 w-5" />
+              ¡Juega Ahora!
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Modal Mobile: Game Over -->
+    <dialog id="modal_game_over" class="modal md:hidden">
+      <div class="modal-box bg-rose-50 dark:bg-rose-950">
+        <div class="mb-4 text-center">
+          <h2 class="mb-2 text-4xl">💀</h2>
+          <h2 class="mb-2 text-2xl font-bold text-rose-900 dark:text-rose-100">
+            ¡Game Over!
+          </h2>
+          <p class="text-lg font-semibold text-emerald-700 dark:text-emerald-300">
+            Puntuación: {{ puntuacion }}
+          </p>
+        </div>
+
+        <div class="my-4 space-y-2 rounded-lg bg-white/50 p-3 dark:bg-rose-900/30">
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            La Bejuquilla ha sido derrotada...
+          </p>
+          <p class="text-xs text-gray-600 dark:text-gray-400">
+            Pero la selva siempre ofrece otra oportunidad.
+          </p>
+        </div>
+
+        <div class="modal-action mt-6">
+          <form method="dialog">
+            <button
+              @click="resetGame"
+              class="btn btn-primary bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              <RefreshCwIcon class="h-5 w-5" />
+              Reintentar
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { useSnakeGame } from '../composables/useSnakeGame'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import gsap from 'gsap'
-import { PauseCircleIcon, PlayCircleIcon, RefreshCwIcon, SparklesIcon } from 'lucide-vue-next'
+import { 
+  PauseCircleIcon, 
+  PlayCircleIcon, 
+  RefreshCwIcon, 
+  SparklesIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from 'lucide-vue-next'
 
 const {
   snake,
   gridSize,
-  elementosRecolectados,
-  compuestoFormado,
   puntuacion,
   startGame,
   stopGame,
   resetGame,
   comidas,
-  nivel,
-  objetivo,
-  requeridos,
-  recolectadosPorElemento,
+  cuchillos,
   juegoGanado,
+  juegoPerdido,
+  setDirection,
   snakeStore,
+  rankingRef,
+  gameStarted,
 } = useSnakeGame()
+
+// Detectar si es mobile
+const md = ref(false)
+
+const updateMediaQuery = () => {
+  md.value = window.innerWidth < 768 // md breakpoint es 768px
+}
+
+// Watchers para mostrar/cerrar modales
+watch(gameStarted, (newVal) => {
+  if (!newVal && md.value) {
+    const modal = document.getElementById('modal_game_start') as HTMLDialogElement
+    modal?.showModal()
+  } else {
+    const modal = document.getElementById('modal_game_start') as HTMLDialogElement
+    modal?.close()
+  }
+})
+
+watch(juegoPerdido, (newVal) => {
+  if (newVal && md.value) {
+    const modal = document.getElementById('modal_game_over') as HTMLDialogElement
+    modal?.showModal()
+  }
+})
+
 // Apariencia: clases por skin
 const snakeCellClass = computed(() => {
   switch (snakeStore.selectedSkin) {
     case 'quantum':
-      return 'rounded-sm bg-gradient-to-br from-emerald-400 to-cyan-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+      return 'rounded-sm bg-gradient-to-br from-emerald-300 to-cyan-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
     case 'molecular':
       return 'rounded-sm bg-gradient-to-br from-purple-500 to-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.6)]'
     case 'legendary':
       return 'rounded-sm bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]'
     default:
-      return 'rounded-sm bg-emerald-500'
+      // Skin por defecto: Verde Bejuquilla
+      return 'rounded-sm bg-emerald-600 border border-emerald-400'
   }
 })
 
@@ -287,48 +348,15 @@ const skinButtonClass = (skin: string) =>
       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
   ]
 
-const particleCount = computed(() => (snakeStore.selectedSkin === 'legendary' ? 80 : 50))
+const particleCount = computed(() => (snakeStore.selectedSkin === 'legendary' ? 60 : 30))
 
 const skinSwatchClass = (skin: string) => {
   switch (skin) {
-    case 'quantum':
-      return 'bg-gradient-to-br from-emerald-400 to-cyan-500'
-    case 'molecular':
-      return 'bg-gradient-to-br from-purple-500 to-pink-500'
-    case 'legendary':
-      return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500'
-    default:
-      return 'bg-emerald-500'
+    case 'quantum': return 'bg-gradient-to-br from-emerald-300 to-cyan-500'
+    case 'molecular': return 'bg-gradient-to-br from-purple-500 to-pink-500'
+    case 'legendary': return 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500'
+    default: return 'bg-emerald-600'
   }
-}
-
-const foodButtonClass = (c: string) =>
-  [
-    snakeStore.foodCosmetic === c
-      ? 'border-blue-500 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
-      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
-  ]
-
-const previewFoodIcon = (c: string) => {
-  switch (c) {
-    case 'orb':
-      return '⬤'
-    case 'atom':
-      return '⚛️'
-    case 'spark':
-      return '✦'
-    default:
-      return '∑' // placeholder; in board we still show element symbol for 'element'
-  }
-}
-
-const renderFood = (x: number, y: number) => {
-  const cosmetic = snakeStore.foodCosmetic
-  if (cosmetic === 'element') return getFoodSymbol(x, y)
-  if (cosmetic === 'orb') return '⬤'
-  if (cosmetic === 'atom') return '⚛️'
-  if (cosmetic === 'spark') return '✦'
-  return getFoodSymbol(x, y)
 }
 
 const isSnake = (x: number, y: number) => {
@@ -339,52 +367,34 @@ const isFood = (x: number, y: number) => {
   return comidas.value.some((c) => c.position.x === x && c.position.y === y)
 }
 
-const getFoodSymbol = (x: number, y: number) => {
+const isKnife = (x: number, y: number) => {
+  return cuchillos.value.some((k) => k.x === x && k.y === y)
+}
+
+const getFoodEmoji = (x: number, y: number) => {
   const comida = comidas.value.find((c) => c.position.x === x && c.position.y === y)
-  return comida?.simbolo ?? ''
-}
-
-const getFoodColor = (x: number, y: number) => {
-  const colors: Record<string, string> = {
-    H: '#60a5fa', // Azul para Hidrógeno
-    O: '#f87171', // Rojo para Oxígeno
-    C: '#a3a3a3', // Gris para Carbono
-    N: '#34d399', // Verde para Nitrógeno
-    Cl: '#a3e635', // Verde lima para Cloro
-    Na: '#fbbf24', // Amarillo para Sodio
-    S: '#f59e0b', // Ámbar para Azufre
-    Ca: '#22d3ee', // Cian para Calcio
-    Fe: '#ef4444', // Rojo para Hierro
-    Al: '#60a5fa', // Azul para Aluminio
-    P: '#a78bfa', // Violeta para Fósforo
-    K: '#eab308', // Amarillo fuerte para Potasio
-    Cu: '#f97316', // Naranja para Cobre
-    Ag: '#d1d5db', // Plateado para Plata
-    Zn: '#93c5fd', // Azul claro para Zinc
-  }
-
-  const symbol = getFoodSymbol(x, y)
-  return colors[symbol] || '#f472b6' // Rosa por defecto
-}
-
-// Progreso por elemento requerido
-const requeridosObjeto = computed<Record<string, number>>(() => {
-  const obj: Record<string, number> = {}
-  requeridos.value.forEach((v, k) => (obj[k] = v))
-  return obj
-})
-
-const progresoElemento = (simb: string) => {
-  return recolectadosPorElemento.value.get(simb) || 0
+  return comida?.emoji ?? ''
 }
 
 // Animaciones con GSAP
 onMounted(() => {
+  // Verificar si es mobile
+  updateMediaQuery()
+  window.addEventListener('resize', updateMediaQuery)
+
+  // Mostrar modal de inicio si es mobile
+  if (md.value && !gameStarted.value) {
+    setTimeout(() => {
+      const modal = document.getElementById('modal_game_start') as HTMLDialogElement
+      modal?.showModal()
+    }, 300)
+  }
+
   // Animación de partículas de fondo
   gsap.to('.particle', {
-    x: () => gsap.utils.random(0, 500),
-    y: () => gsap.utils.random(0, 500),
-    duration: gsap.utils.random(10, 20),
+    x: () => gsap.utils.random(-100, 100),
+    y: () => gsap.utils.random(-100, 100),
+    duration: gsap.utils.random(5, 10),
     repeat: -1,
     yoyo: true,
     ease: 'sine.inOut',
@@ -392,65 +402,44 @@ onMounted(() => {
 
   // Animación de borde del tablero
   gsap.to('.animate-border', {
-    borderColor: gsap.utils.random(['#10b981', '#3b82f6', '#10b981']),
-    duration: 4,
+    borderColor: '#059669',
+    borderWidth: '4px',
+    duration: 2,
     repeat: -1,
     yoyo: true,
-    ease: 'sine.inOut',
+    ease: 'power1.inOut',
   })
 
-  // Animación para los elementos recolectados
-  elementosRecolectados.value.forEach((_, index) => {
-    gsap.from(
-      `.bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-md:nth-child(${index + 1})`,
-      {
-        scale: 0,
-        opacity: 0,
-        duration: 0.5,
-        delay: index * 0.1,
-        ease: 'back.out',
-      },
-    )
-  })
+  // Cleanup
+  return () => {
+    window.removeEventListener('resize', updateMediaQuery)
+  }
 })
 </script>
 
 <style scoped>
-/* Animaciones personalizadas */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) translateX(-50%);
-  }
-  50% {
-    transform: translateY(-10px) translateX(-50%);
-  }
+.game-board {
+  display: inline-block;
+  background-image: radial-gradient(circle, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Estilos para las partículas */
-.particle {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-}
-
-.particle:nth-child(odd) {
-  width: 15px;
-  height: 15px;
-  background-color: rgba(16, 185, 129, 0.2);
-}
-
-/* Efecto para las celdas de comida */
 .food-icon {
-  filter: drop-shadow(0 0 4px currentColor);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-/* Efecto para la serpiente */
-.snake {
-  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.3);
+.knife-icon {
+  filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.4));
+}
+
+.particle {
+  width: 20px;
+  height: 20px;
+  opacity: 0.5;
+}
+
+.particle:nth-child(even) {
+  width: 10px;
+  height: 10px;
 }
 </style>

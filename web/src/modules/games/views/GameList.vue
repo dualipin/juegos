@@ -60,8 +60,8 @@
             :delay="0.3" @click="$router.push({ name: 'games.quiz' })" />
 
           <!-- Snake -->
-          <GameCard class="hover:scale-[1.02] transition-all duration-300" title="Culebrita Atómica"
-            description="Controla una serpiente y forma compuestos químicos al recolectar elementos" icon="🐍"
+          <GameCard class="hover:scale-[1.02] transition-all duration-300" title="La Bejuquilla"
+            description="Ayuda a la bejuquilla a cazar" icon="🐍"
             color="from-green-500 to-emerald-600" :delay="0.4" @click="$router.push({ name: 'games.snake' })" />
 
           <!-- Constructor -->
