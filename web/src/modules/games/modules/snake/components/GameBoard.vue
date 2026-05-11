@@ -2,11 +2,8 @@
   <div class="relative flex flex-col items-center justify-center p-4">
     <!-- Partículas de fondo (Selva) -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        v-for="i in particleCount"
-        :key="i"
-        class="particle absolute rounded-full bg-emerald-400/30 dark:bg-emerald-600/20"
-      ></div>
+      <div v-for="i in particleCount" :key="i"
+        class="particle absolute rounded-full bg-emerald-400/30 dark:bg-emerald-600/20"></div>
     </div>
 
     <!-- Contenedor principal -->
@@ -14,28 +11,18 @@
       <!-- Tablero de juego -->
       <div class="relative">
         <div
-          class="game-board rounded-xl border-4 border-amber-900/50 bg-emerald-50/90 p-1 shadow-2xl backdrop-blur-sm dark:border-amber-700/50 dark:bg-emerald-950/50"
-        >
+          class="game-board rounded-xl border-4 border-amber-900/50 bg-emerald-50/90 p-1 shadow-2xl backdrop-blur-sm dark:border-amber-700/50 dark:bg-emerald-950/50">
           <div v-for="y in gridSize" :key="y" class="row flex">
-            <div
-              v-for="x in gridSize"
-              :key="x"
+            <div v-for="x in gridSize" :key="x"
               class="cell flex h-[13px] w-[13px] sm:h-6 sm:w-6 md:h-8 md:w-8 items-center justify-center border border-emerald-200/20 transition-all duration-200 dark:border-emerald-800/20"
               :class="[
                 isSnake(x - 1, y - 1) ? snakeCellClass : '',
                 { 'scale-110': isFood(x - 1, y - 1) || isKnife(x - 1, y - 1) },
-              ]"
-            >
-              <span
-                v-if="isFood(x - 1, y - 1)"
-                class="food-icon animate-bounce text-[10px] sm:text-base md:text-xl"
-              >
+              ]">
+              <span v-if="isFood(x - 1, y - 1)" class="food-icon animate-bounce text-[10px] sm:text-base md:text-xl">
                 {{ getFoodEmoji(x - 1, y - 1) }}
               </span>
-              <span
-                v-if="isKnife(x - 1, y - 1)"
-                class="knife-icon animate-pulse text-[10px] sm:text-base md:text-xl"
-              >
+              <span v-if="isKnife(x - 1, y - 1)" class="knife-icon animate-pulse text-[10px] sm:text-base md:text-xl">
                 🔪
               </span>
             </div>
@@ -43,44 +30,35 @@
         </div>
 
         <!-- Efecto de borde animado -->
-        <div
-          class="animate-border pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"
-        ></div>
+        <div class="animate-border pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent"></div>
 
         <!-- Controles Móviles (D-Pad) -->
         <div class="mt-8 flex flex-col items-center justify-center md:hidden">
           <!-- Fila superior -->
-          <button 
-            @click="setDirection('up')" 
-            class="mb-1 flex h-16 w-16 items-center justify-center rounded-t-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
-          >
+          <button @click="setDirection('up')"
+            class="mb-1 flex h-16 w-16 items-center justify-center rounded-t-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500">
             <ChevronUpIcon class="h-8 w-8" />
           </button>
-          
+
           <!-- Fila central -->
           <div class="flex gap-1">
-            <button 
-              @click="setDirection('left')" 
-              class="flex h-16 w-16 items-center justify-center rounded-l-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
-            >
+            <button @click="setDirection('left')"
+              class="flex h-16 w-16 items-center justify-center rounded-l-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500">
               <ChevronLeftIcon class="h-8 w-8" />
             </button>
-            <div class="h-16 w-16 bg-emerald-700/40 rounded-xl shadow-inner flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <div
+              class="h-16 w-16 bg-emerald-700/40 rounded-xl shadow-inner flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <span class="text-2xl font-bold">◆</span>
             </div>
-            <button 
-              @click="setDirection('right')" 
-              class="flex h-16 w-16 items-center justify-center rounded-r-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
-            >
+            <button @click="setDirection('right')"
+              class="flex h-16 w-16 items-center justify-center rounded-r-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500">
               <ChevronRightIcon class="h-8 w-8" />
             </button>
           </div>
-          
+
           <!-- Fila inferior -->
-          <button 
-            @click="setDirection('down')" 
-            class="mt-1 flex h-16 w-16 items-center justify-center rounded-b-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500"
-          >
+          <button @click="setDirection('down')"
+            class="mt-1 flex h-16 w-16 items-center justify-center rounded-b-2xl bg-emerald-600 text-white shadow-lg active:scale-95 active:bg-emerald-700 transition-all duration-100 hover:bg-emerald-500">
             <ChevronDownIcon class="h-8 w-8" />
           </button>
         </div>
@@ -88,8 +66,7 @@
 
       <!-- Panel de información -->
       <div
-        class="info-panel w-full max-w-md rounded-xl border border-amber-200/50 bg-white/80 p-6 shadow-2xl backdrop-blur-sm dark:border-amber-900/50 dark:bg-gray-900/80"
-      >
+        class="info-panel w-full max-w-md rounded-xl border border-amber-200/50 bg-white/80 p-6 shadow-2xl backdrop-blur-sm dark:border-amber-900/50 dark:bg-gray-900/80">
         <div class="space-y-6">
           <!-- Puntuación -->
           <div class="rounded-lg bg-emerald-100/70 p-4 dark:bg-emerald-900/30">
@@ -105,13 +82,9 @@
               Apariencia
             </h3>
             <div class="flex flex-wrap gap-2">
-              <button
-                v-for="skin in snakeStore.unlockedSkins"
-                :key="skin"
-                @click="snakeStore.selectSkin(skin)"
+              <button v-for="skin in snakeStore.unlockedSkins" :key="skin" @click="snakeStore.selectSkin(skin)"
                 class="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm capitalize transition"
-                :class="skinButtonClass(skin)"
-              >
+                :class="skinButtonClass(skin)">
                 <span class="inline-block h-3 w-3 rounded-sm" :class="skinSwatchClass(skin)"></span>
                 {{ skin }}
               </button>
@@ -120,24 +93,18 @@
 
           <!-- Controles -->
           <div class="grid grid-cols-2 gap-3">
-            <button
-              @click="startGame"
-              class="flex transform items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-emerald-500 active:scale-95"
-            >
+            <button @click="startGame"
+              class="flex transform items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-emerald-500 active:scale-95">
               <PlayCircleIcon class="h-5 w-5" />
               INICIAR
             </button>
-            <button
-              @click="stopGame"
-              class="flex transform items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-amber-500 active:scale-95"
-            >
+            <button @click="stopGame"
+              class="flex transform items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-3 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-amber-500 active:scale-95">
               <PauseCircleIcon class="h-5 w-5" />
               PAUSAR
             </button>
-            <button
-              @click="resetGame"
-              class="col-span-2 flex transform items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-rose-500 active:scale-95"
-            >
+            <button @click="resetGame"
+              class="col-span-2 flex transform items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-rose-500 active:scale-95">
               <RefreshCwIcon class="h-5 w-5" />
               REINICIAR
             </button>
@@ -149,11 +116,8 @@
               Logros en la Selva
             </h3>
             <div class="flex min-h-10 flex-wrap gap-2">
-              <span
-                v-for="r in snakeStore.rewards"
-                :key="r"
-                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
-              >
+              <span v-for="r in snakeStore.rewards" :key="r"
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
                 🏆 {{ r }}
               </span>
               <span v-if="snakeStore.rewards.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
@@ -166,15 +130,10 @@
     </div>
 
     <!-- Banner de victoria -->
-    <transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform scale-95 opacity-0"
-      enter-to-class="transform scale-100 opacity-100"
-    >
-      <div
-        v-if="juegoGanado"
-        class="fixed inset-x-0 bottom-6 z-50 mx-auto w-[90%] max-w-lg rounded-xl border border-emerald-400/40 bg-emerald-600/90 p-5 text-white shadow-2xl backdrop-blur-sm"
-      >
+    <transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100">
+      <div v-if="juegoGanado"
+        class="fixed inset-x-0 bottom-6 z-50 mx-auto w-[90%] max-w-lg rounded-xl border border-emerald-400/40 bg-emerald-600/90 p-5 text-white shadow-2xl backdrop-blur-sm">
         <div class="flex items-start gap-3">
           <SparklesIcon class="mt-1 h-6 w-6 flex-shrink-0" />
           <div class="flex-1">
@@ -217,16 +176,17 @@
           </div>
         </div>
 
-        <div class="modal-action mt-6">
+        <div class="mt-6 flex flex-col gap-2">
+
           <form method="dialog" class="w-full">
-            <button
-              @click="startGame"
-              class="btn btn-primary w-full bg-emerald-600 text-white hover:bg-emerald-700"
-            >
+            <button @click="startGame" class="btn btn-primary w-full bg-emerald-600 text-white hover:bg-emerald-700">
               <PlayCircleIcon class="h-5 w-5" />
               ¡Juega Ahora!
             </button>
           </form>
+          <button @click="goToGameList" class="btn btn-ghost w-full btn-error">
+            Salir
+          </button>
         </div>
       </div>
     </dialog>
@@ -253,12 +213,12 @@
           </p>
         </div>
 
-        <div class="modal-action mt-6">
-          <form method="dialog">
-            <button
-              @click="resetGame"
-              class="btn btn-primary bg-emerald-600 text-white hover:bg-emerald-700"
-            >
+        <div class="mt-6 flex flex-col gap-2">
+          <button @click="goToGameList" class="btn btn-ghost w-full text-gray-700 dark:text-gray-300">
+            Salir
+          </button>
+          <form method="dialog" class="w-full">
+            <button @click="resetGame" class="btn btn-primary w-full bg-emerald-600 text-white hover:bg-emerald-700">
               <RefreshCwIcon class="h-5 w-5" />
               Reintentar
             </button>
@@ -272,11 +232,12 @@
 <script lang="ts" setup>
 import { useSnakeGame } from '../composables/useSnakeGame'
 import { onMounted, computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import gsap from 'gsap'
-import { 
-  PauseCircleIcon, 
-  PlayCircleIcon, 
-  RefreshCwIcon, 
+import {
+  PauseCircleIcon,
+  PlayCircleIcon,
+  RefreshCwIcon,
   SparklesIcon,
   ChevronUpIcon,
   ChevronDownIcon,
@@ -300,6 +261,12 @@ const {
   rankingRef,
   gameStarted,
 } = useSnakeGame()
+
+const router = useRouter()
+
+const goToGameList = () => {
+  router.push({ name: 'games' })
+}
 
 // Detectar si es mobile
 const md = ref(false)
