@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { DifficultyQuestionCost, type Question } from '../types/Quiz'
-import { getAllQuestions, getRandomQuizzes } from '../services/quiz-services'
-import { all } from 'axios'
+import { generateAIQuestions } from '../services/quiz-services'
 
 export const useQuizStore = defineStore(
   'quiz',
@@ -18,43 +17,46 @@ export const useQuizStore = defineStore(
     const highestStreak = ref<number>(0) // Récord de preguntas correctas consecutivas
     const createdBy = ref<Question['created_by'] | null>(null)
     const allQuestions = ref<Question[]>([])
+    const isLoading = ref(false)
 
     async function loadQuestion() {
       try {
+        isLoading.value = true
+
+        // Si ya tenemos preguntas en el pool, usar una aleatoria
         if (questions.value.length > 0) {
-          questions.value = getQuestionsByCreator(createdBy.value)
-          if (questions.value.length === 0) {
-            questions.value = allQuestions.value
-          }
-          currentQuestion.value =
-            questions.value[Math.floor(Math.random() * questions.value.length)]
+          const difficulty = getDifficultyForLevel()
+          const filtered = questions.value.filter((q) => q.difficulty === difficulty)
+          const pool = filtered.length > 0 ? filtered : questions.value
+
+          // Seleccionar pregunta aleatoria y removerla del pool
+          const index = Math.floor(Math.random() * pool.length)
+          currentQuestion.value = pool[index]
+          questions.value = questions.value.filter((_, i) => {
+            // Encontrar el índice real en questions.value
+            return questions.value[i] !== pool[index]
+          })
         } else {
-          await getRandomQuizzes(1) // Fetch a random question to start
-          try {
-            allQuestions.value = await getAllQuestions()
-            createdBy.value = null // Reset creator filter
-            questions.value = getQuestionsByCreator(createdBy.value)
-          } catch (error) {
-            console.error('Error fetching all questions:', error)
+          // Fetch un lote nuevo de preguntas de Macuspana con IA
+          const difficulty = getDifficultyForLevel()
+          const newQuestions = await generateAIQuestions(5, difficulty)
+
+          if (newQuestions.length > 0) {
+            currentQuestion.value = newQuestions[0]
+            questions.value = newQuestions.slice(1)
+            allQuestions.value = [...allQuestions.value, ...newQuestions]
           }
-          if (questions.value.length === 0) {
-            questions.value = allQuestions.value
-          }
-          const levelQuestions = questions.value.filter(
-            (q) => getDifficultyForLevel() === q.difficulty,
-          )
-          currentQuestion.value = levelQuestions[Math.floor(Math.random() * levelQuestions.length)]
         }
       } catch (error) {
         console.error('Error loading questions:', error)
+      } finally {
+        isLoading.value = false
       }
     }
 
     function getQuestionsByCreator(creatorId: string | null) {
       if (!creatorId) return allQuestions.value
       if (creatorId === 'community') {
-        // Filtra todas las preguntas que NO sean de IA ni system
-        console.log('preguntas de la comunidad')
         return allQuestions.value.filter((q) => q.created_by !== 'IA' && q.created_by !== 'system')
       }
       return allQuestions.value.filter((q) => q.created_by === creatorId)
@@ -150,6 +152,7 @@ export const useQuizStore = defineStore(
       currentStreak,
       highestStreak,
       createdBy,
+      isLoading,
     }
   },
   {

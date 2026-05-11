@@ -1,5 +1,5 @@
 import api from '@/services/api'
-import type { Question } from '../types/Quiz'
+import type { Question, QuestionDifficulty } from '../types/Quiz'
 
 const V1_QUIZ_API_URL = 'v1/games/quizzes'
 
@@ -39,6 +39,25 @@ export async function createQuestion(question: Question) {
     return response.data
   } catch (error) {
     console.error('Error creating question:', error)
+    throw error
+  }
+}
+
+/**
+ * Genera preguntas de Macuspana usando IA (Gemini)
+ */
+export async function generateAIQuestions(
+  count: number = 5,
+  difficulty: QuestionDifficulty = 'easy',
+): Promise<Question[]> {
+  try {
+    const response = await api.post<Question[]>(`${V1_QUIZ_API_URL}/generate`, {
+      count,
+      difficulty,
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error generando preguntas con IA:', error)
     throw error
   }
 }
