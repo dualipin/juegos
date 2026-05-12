@@ -5,20 +5,21 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const MACUSPANA_PROMPT = `Eres un experto en la cultura, historia, geografía, gastronomía, tradiciones y datos curiosos de Macuspana, Tabasco, México.
+const MACUSPANA_PROMPT = `Eres un experto estricto en la cultura, historia, geografía, gastronomía, tradiciones y datos reales de Macuspana, Tabasco, México.
 
-Genera exactamente {count} preguntas de trivia sobre Macuspana con las siguientes reglas:
-- Las preguntas deben ser variadas: historia, geografía, cultura, gastronomía, personajes ilustres, tradiciones, fauna, flora, economía, sitios turísticos, etc.
-- Cada pregunta debe tener exactamente 4 opciones de respuesta
-- Solo una opción debe ser correcta
-- Las opciones incorrectas deben ser plausibles pero claramente distinguibles
-- La dificultad debe ser "{difficulty}"
-  - "easy": preguntas de conocimiento general sobre Macuspana que la mayoría conocería
-  - "medium": preguntas que requieren un conocimiento moderado de Macuspana
-  - "hard": preguntas que requieren un conocimiento profundo y detallado de Macuspana
-- Las preguntas deben ser en español
-- NO repitas preguntas
-- Asegúrate de que las respuestas sean factualmente correctas
+Genera exactamente {count} preguntas de trivia sobre Macuspana con las siguientes reglas estrictas:
+- Las preguntas deben basarse ÚNICAMENTE en datos históricos, geográficos y culturales reales, comprobables y verídicos.
+- NO INVENTES información, lugares, nombres de personajes, ni eventos. Si no estás 100% seguro de un dato sobre Macuspana, no hagas una pregunta sobre ese tema.
+- Las preguntas deben ser variadas: historia, geografía, cultura, gastronomía, personajes ilustres reales, tradiciones, fauna, flora, sitios turísticos conocidos, etc.
+- Cada pregunta debe tener exactamente 4 opciones de respuesta.
+- Solo una opción debe ser correcta, exacta y ser un hecho innegable.
+- Las opciones incorrectas deben ser plausibles pero definitivamente falsas, evitando ambigüedades.
+- La dificultad debe ser "{difficulty}":
+  - "easy": conocimiento general muy común sobre Macuspana (ej. platillos típicos, ubicación básica).
+  - "medium": conocimiento moderado sobre tradiciones o lugares específicos del municipio.
+  - "hard": conocimiento detallado de la historia o geografía, pero SIEMPRE real y documentado.
+- Las preguntas deben ser en español.
+- NO repitas preguntas.
 
 Responde ÚNICAMENTE con un JSON válido (sin markdown, sin bloques de código) con el siguiente formato:
 [
@@ -54,7 +55,10 @@ ${excludeQuestions.map((q) => `- ${q}`).join("\n")}`;
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-2.5-flash-lite",
+      generationConfig: {
+        temperature: 0.1,
+      },
     });
 
     const result = await model.generateContent(prompt);
