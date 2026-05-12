@@ -37,22 +37,41 @@ export const useQuizStore = defineStore(
             return questions.value[i] !== pool[index]
           })
         } else {
+          currentQuestion.value = null // Activa el estado de carga
+          
           // Fetch un lote nuevo de preguntas de Macuspana con IA
           const difficulty = getDifficultyForLevel()
           
           // Obtener textos de preguntas ya vistas para evitar repeticiones
           const seenQuestionTexts = allQuestions.value.map(q => q.question)
           
-          const newQuestions = await generateAIQuestions(5, difficulty, seenQuestionTexts)
+          let newQuestions = await generateAIQuestions(5, difficulty, seenQuestionTexts)
 
-          if (newQuestions.length > 0) {
+          // Reintentar una vez si falla o retorna vacío
+          if (!newQuestions || newQuestions.length === 0) {
+            console.warn('Reintentando fetch de preguntas...')
+            newQuestions = await generateAIQuestions(5, difficulty, seenQuestionTexts)
+          }
+
+          if (newQuestions && newQuestions.length > 0) {
             currentQuestion.value = newQuestions[0]
             questions.value = newQuestions.slice(1)
             allQuestions.value = [...allQuestions.value, ...newQuestions]
+          } else {
+            throw new Error("No se pudieron generar preguntas de Macuspana")
           }
         }
       } catch (error) {
         console.error('Error loading questions:', error)
+        // Pregunta de fallback para no bloquear el juego
+        currentQuestion.value = {
+          id: Date.now(),
+          question: "Hubo un error de conexión con la IA. ¿Deseas reintentar?",
+          options: ["Sí", "Claro", "Por supuesto", "Reintentar"],
+          answer: "Sí",
+          difficulty: 'easy',
+          created_by: 'system',
+        }
       } finally {
         isLoading.value = false
       }

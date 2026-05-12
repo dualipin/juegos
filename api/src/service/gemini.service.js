@@ -1,9 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import dotenv from 'dotenv'
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const MACUSPANA_PROMPT = `Eres un experto en la cultura, historia, geografía, gastronomía, tradiciones y datos curiosos de Macuspana, Tabasco, México.
 
@@ -28,7 +28,7 @@ Responde ÚNICAMENTE con un JSON válido (sin markdown, sin bloques de código) 
     "answer": "Opción correcta (debe ser exactamente igual a una de las opciones)",
     "difficulty": "{difficulty}"
   }
-]`
+]`;
 
 /**
  * Genera preguntas de trivia sobre Macuspana usando Gemini AI
@@ -37,35 +37,42 @@ Responde ÚNICAMENTE con un JSON válido (sin markdown, sin bloques de código) 
  * @param {Array<string>} excludeQuestions - Lista de preguntas a evitar
  * @returns {Promise<Array>} Array de preguntas generadas
  */
-export async function generateMacuspanaQuestions(count = 5, difficulty = 'easy', excludeQuestions = []) {
-  let prompt = MACUSPANA_PROMPT
-    .replace(/{count}/g, String(count))
-    .replace(/{difficulty}/g, difficulty)
+export async function generateMacuspanaQuestions(
+  count = 5,
+  difficulty = "easy",
+  excludeQuestions = [],
+) {
+  let prompt = MACUSPANA_PROMPT.replace(/{count}/g, String(count)).replace(
+    /{difficulty}/g,
+    difficulty,
+  );
 
   if (excludeQuestions && excludeQuestions.length > 0) {
     prompt += `\n\nIMPORTANTE: NO generes ninguna de las siguientes preguntas (ya han sido mostradas):
-${excludeQuestions.map((q) => `- ${q}`).join('\n')}`
+${excludeQuestions.map((q) => `- ${q}`).join("\n")}`;
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.1-flash-lite-preview",
+    });
 
-    const result = await model.generateContent(prompt)
-    const response = result.response
-    const text = response.text().trim()
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text().trim();
 
     // Limpiar posible markdown wrapping
     const cleanText = text
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
-    const questions = JSON.parse(cleanText)
+    const questions = JSON.parse(cleanText);
 
     // Validar estructura
     if (!Array.isArray(questions)) {
-      throw new Error('La respuesta de Gemini no es un array válido')
+      throw new Error("La respuesta de Gemini no es un array válido");
     }
 
     return questions.map((q) => ({
@@ -74,11 +81,10 @@ ${excludeQuestions.map((q) => `- ${q}`).join('\n')}`
       options: q.options,
       answer: q.answer,
       difficulty: q.difficulty || difficulty,
-      created_by: 'IA',
-    }))
+      created_by: "IA",
+    }));
   } catch (error) {
-    console.error('Error generando preguntas con Gemini:', error)
-    throw new Error(`Error al generar preguntas: ${error.message}`)
+    console.error("Error generando preguntas con Gemini:", error);
+    throw new Error(`Error al generar preguntas: ${error.message}`);
   }
 }
-
