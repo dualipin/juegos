@@ -26,10 +26,10 @@
           <span v-else class="badge badge-success">Conectado</span>
           <button
             @click="handleLeaveRoom"
-            class="btn btn-sm btn-ghost"
+            class="btn btn-error btn-sm"
             title="Salir de la sala"
           >
-            ✕
+            Salir
           </button>
         </div>
       </div>
@@ -52,7 +52,7 @@
         <!-- Botón lanzar (solo host) -->
         <div v-if="store.isHost" class="card bg-base-100 shadow-lg border border-base-200">
           <div class="card-body">
-            <h3 class="card-title text-base-content">Panel del anfitrión</h3>
+            <h3 class="card-title text-base-content">Eres el anfitrión</h3>
             <p class="text-sm text-base-content/60 mb-4">
               Cartas lanzadas: <span class="font-bold">{{ store.drawnElements.length }} / {{ maxCards }}</span>
             </p>
@@ -79,7 +79,7 @@
               <div
                 v-for="card in store.drawnElements"
                 :key="card"
-                class="flex items-center justify-center aspect-3/5 overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
+                class="flex items-center justify-center aspect-3/4.5 overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
               >
                 <img
                   :src="cardImage(card)"
@@ -104,7 +104,7 @@
                 v-for="card in store.card"
                 :key="card"
                 :class="[
-                  'flex items-center justify-center aspect-3/5 overflow-hidden rounded transition-all duration-300 relative',
+                  'flex items-center justify-center aspect-3/4.5 overflow-hidden rounded transition-all duration-300 relative',
                   store.drawnElements.includes(card)
                     ? 'bg-success text-white shadow-lg scale-110'
                     : 'bg-base-200 text-base-content border-2 border-base-300',
@@ -114,6 +114,7 @@
                   :src="cardImage(card)"
                   :alt="cardLabel(card)"
                   class="h-full w-full object-cover"
+                  :class="store.drawnElements.includes(card) ? 'opacity-100' : 'opacity-50 hover:opacity-75'"
                   loading="lazy"
                 />
                 <!-- Frijolito cuando la carta está marcada -->
@@ -121,7 +122,7 @@
                   v-if="store.drawnElements.includes(card)"
                   class="absolute inset-0 flex items-center justify-center text-4xl"
                 >
-                  🫘
+                  <span class="text-5xl brightness-50">🫘</span>
                 </div>
               </div>
             </div>
