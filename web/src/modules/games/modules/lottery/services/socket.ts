@@ -2,15 +2,19 @@ let socket: WebSocket | null = null
 let reconnectAttempts = 0
 const maxReconnectAttempts = 5
 let reconnectTimeout: NodeJS.Timeout | null = null
+let isManualClose = false
+
 
 export function connectWebSocket(
   roomCode: string,
   playerId: string,
   onMessage: (data: any) => void,
 ) {
-  if (socket && socket.readyState === WebSocket.OPEN) {
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     return
   }
+
+  isManualClose = false
 
   const apiUrl = import.meta.env.VITE_API_URL
   let wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -54,7 +58,9 @@ export function connectWebSocket(
   socket.onclose = () => {
     console.log('WebSocket disconnected')
     onMessage({ type: 'disconnected' })
-    attemptReconnect(roomCode, playerId, onMessage)
+    if (!isManualClose) {
+      attemptReconnect(roomCode, playerId, onMessage)
+    }
   }
 }
 
@@ -81,8 +87,10 @@ export function sendMessage(message: any) {
 }
 
 export function disconnectWebSocket() {
+  isManualClose = true
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout)
+    reconnectTimeout = null
   }
   if (socket) {
     socket.close()
