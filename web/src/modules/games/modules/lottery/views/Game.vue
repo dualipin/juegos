@@ -268,6 +268,17 @@ function handleWebSocketMessage(data: any) {
       store.drawCard(card)
       // Reproducir el nombre de la carta en voz
       speakCard(card)
+
+      // Vibración: simple si se lanza, doble si la tengo
+      if ('vibrate' in navigator) {
+        if (store.card.includes(card)) {
+          // Doble pulso si la tengo en mi cartón
+          navigator.vibrate([200, 100, 200])
+        } else {
+          // Pulso simple si no la tengo
+          navigator.vibrate(100)
+        }
+      }
       break
     }
 
@@ -296,7 +307,7 @@ function handleWebSocketMessage(data: any) {
         store.setCreatorId(data.creatorId)
       }
       store.updatePlayers(data.players)
-      toast.show('Un jugador se desconectó', 'warning')
+      toast.show(`${data.playerName || 'Un jugador'} se ha desconectado`, 'warning')
       break
     }
 
@@ -343,6 +354,10 @@ async function refreshPlayerData() {
 
 function handleDraw() {
   isDrawing.value = true
+  // Vibración táctil inmediata al presionar
+  if ('vibrate' in navigator) {
+    navigator.vibrate(50)
+  }
   sendMessage({ action: 'draw' })
   setTimeout(() => {
     isDrawing.value = false

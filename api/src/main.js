@@ -143,6 +143,10 @@ wss.on("connection", (ws, req) => {
 
     // Notificar a otros que el jugador se desconectó
     try {
+      const roomBefore = loteriaService.getRoom(roomCode);
+      const player = roomBefore.players.find((p) => p.id === playerId);
+      const playerName = player ? player.name : "Un jugador";
+
       loteriaService.removePlayer(playerId, roomCode);
       const room = loteriaService.getRoom(roomCode);
       const connectedPlayers = room.players
@@ -151,6 +155,7 @@ wss.on("connection", (ws, req) => {
       broadcastToRoom(roomCode, null, {
         type: "playerDisconnected",
         playerId,
+        playerName,
         creatorId: room.creatorId,
         players: connectedPlayers,
       });

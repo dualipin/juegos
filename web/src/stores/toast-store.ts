@@ -10,7 +10,7 @@ export const useToastStore = defineStore('toast', {
     show(message: string, type: 'success' | 'error' | 'info' | undefined = undefined) {
       this.toasts.push({ id: ++id, message, type })
 
-      // Vibration logic
+      // Vibration logic (Note: navigator.vibrate is NOT supported on iOS Safari)
       if ('vibrate' in navigator) {
         if (type === 'error') {
           // Double pulse for errors
