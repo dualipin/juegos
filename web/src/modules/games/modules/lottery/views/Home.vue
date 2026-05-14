@@ -179,8 +179,11 @@ async function handleAction() {
   isLoading.value = true
 
   try {
+    const savedSession = roomCode.value ? store.getSavedSession(roomCode.value) : null
+    const playerIdToUse = savedSession?.playerId
+
     if (action.value === 'create') {
-      const response = await roomService.createRoom(playerName.value)
+      const response = await roomService.createRoom(playerName.value, playerIdToUse)
       store.initializeGame({
         roomCode: response.roomCode,
         playerId: response.playerId,
@@ -188,13 +191,13 @@ async function handleAction() {
         creatorId: response.creatorId,
         isHost: response.isHost,
         card: response.card,
-        players: [{ id: response.playerId, name: response.playerName }],
+        players: response.players,
         drawnCards: response.drawnCards || [],
       })
       toast.show(`¡Sala creada! Código: ${response.roomCode}`, 'success')
       router.push({ name: 'games.lottery.game' })
     } else if (action.value === 'join') {
-      const response = await roomService.joinRoom(roomCode.value, playerName.value)
+      const response = await roomService.joinRoom(roomCode.value, playerName.value, playerIdToUse)
       store.initializeGame({
         roomCode: response.roomCode,
         playerId: response.playerId,

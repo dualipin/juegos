@@ -63,6 +63,25 @@ export const useGameStore = defineStore('lotteryGame', () => {
     players.value = data.players || [{ id: data.playerId, name: data.playerName }]
     drawnElements.value = data.drawnCards || []
     connected.value = true
+
+    // Guardar sesión en localStorage para reconexión
+    localStorage.setItem(`lottery_session_${data.roomCode}`, JSON.stringify({
+      playerId: data.playerId,
+      playerName: data.playerName,
+      roomCode: data.roomCode
+    }))
+  }
+
+  function getSavedSession(targetRoomCode: string) {
+    const saved = localStorage.getItem(`lottery_session_${targetRoomCode}`)
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return null
+      }
+    }
+    return null
   }
 
   function addPlayer(player: Player) {
@@ -77,7 +96,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     }
   }
 
-  function setWinner(winnerName: string) {
+  function setWinner(winnerName: string | null) {
     winner.value = winnerName
   }
 
@@ -101,7 +120,28 @@ export const useGameStore = defineStore('lotteryGame', () => {
     gameStarted.value = state
   }
 
+  function handleRoomReset(data: {
+    players: Player[]
+    gameStarted: boolean
+    drawnCards: string[]
+    winner: string | null
+  }) {
+    players.value = data.players
+    gameStarted.value = data.gameStarted
+    drawnElements.value = data.drawnCards
+    winner.value = data.winner
+    // El cartón será actualizado por el componente Game.vue al recibir el mensaje 'connected' o similar
+    // pero aquí reseteamos el estado visual
+  }
+
+  function updateCard(newCard: string[]) {
+    card.value = newCard
+  }
+
   function resetGame() {
+    if (roomCode.value) {
+      localStorage.removeItem(`lottery_session_${roomCode.value}`)
+    }
     roomCode.value = ''
     playerId.value = ''
     playerName.value = ''
@@ -133,6 +173,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     playersList,
     // Methods
     initializeGame,
+    getSavedSession,
     addPlayer,
     drawCard,
     setWinner,
@@ -141,6 +182,8 @@ export const useGameStore = defineStore('lotteryGame', () => {
     setCreatorId,
     setIsHost,
     setGameStarted,
+    handleRoomReset,
+    updateCard,
     resetGame,
   }
 })

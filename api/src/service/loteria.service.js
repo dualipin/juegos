@@ -100,34 +100,23 @@ class LoteriaService {
   joinRoom(roomCode, playerId, playerName) {
     const room = this.getRoom(roomCode)
 
-    if (room.game_started) {
-      // Verificar si el jugador ya existe (reconexión)
-      const existingPlayer = this.db
-        .prepare('SELECT * FROM players WHERE id = ? AND room_code = ?')
-        .get(playerId, roomCode)
-
-      if (!existingPlayer) {
-        throw new Error('El juego ya ha iniciado')
-      }
-
-      // Actualizar estado de conexión
-      this.db
-        .prepare('UPDATE players SET connected = 1, connected_at = CURRENT_TIMESTAMP, disconnected_at = NULL WHERE id = ?')
-        .run(playerId)
-
-      this.touchRoom(roomCode)
-
-      return this.getRoom(roomCode)
-    }
-
-    // Verificar si el jugador ya existe
+    // Verificar si el jugador ya existe (reconexión)
     const existingPlayer = this.db
       .prepare('SELECT * FROM players WHERE id = ? AND room_code = ?')
       .get(playerId, roomCode)
 
     if (existingPlayer) {
-      this.markPlayerConnected(playerId, roomCode)
+      // Actualizar nombre si cambió y marcar como conectado
+      this.db
+        .prepare('UPDATE players SET name = ?, connected = 1, connected_at = CURRENT_TIMESTAMP, disconnected_at = NULL WHERE id = ? AND room_code = ?')
+        .run(playerName, playerId, roomCode)
+
+      this.touchRoom(roomCode)
       return this.getRoom(roomCode)
+    }
+
+    if (room.gameStarted) {
+      throw new Error('El juego ya ha iniciado')
     }
 
     const deck = parseCardList(room.deck)
@@ -141,16 +130,58 @@ class LoteriaService {
     `)
     stmt.run(playerId, roomCode, playerName, boardJson)
 
-    // Si ya hay 2+ jugadores, iniciar el juego
+    // Si ya hay 2+ jugadores, iniciar el juego automáticamente
     const playerCount = this.db
       .prepare('SELECT COUNT(*) as count FROM players WHERE room_code = ?')
       .get(roomCode).count
 
-    if (playerCount > 1) {
+    if (playerCount > 1 && !room.gameStarted) {
       this.db.prepare('UPDATE rooms SET game_started = 1 WHERE code = ?').run(roomCode)
     }
 
     this.touchRoom(roomCode)
+
+    return this.getRoom(roomCode)
+  }
+
+  /**
+   * Reiniciar sala
+   */
+  resetRoom(roomCode, playerId) {
+    const room = this.getRoom(roomCode)
+
+    if (playerId !== room.creatorId) {
+      throw new Error('Solo el anfitrión puede reiniciar la sala')
+    }
+
+    const newDeck = generateDeck()
+    const deckJson = JSON.stringify(newDeck)
+
+    // Limpiar cartas lanzadas y resetear estado de la sala
+    this.db.transaction(() => {
+      // Borrar cartas lanzadas
+      this.db.prepare('DELETE FROM drawn_cards WHERE room_code = ?').run(roomCode)
+      
+      // Resetear sala
+      this.db.prepare(`
+        UPDATE rooms 
+        SET game_started = 1, 
+            winner_id = NULL, 
+            winner_name = NULL, 
+            deck = ?,
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE code = ?
+      `).run(deckJson, roomCode)
+
+      // Generar nuevos cartones para todos los jugadores
+      const players = this.db.prepare('SELECT id FROM players WHERE room_code = ?').all(roomCode)
+      const updateBoardStmt = this.db.prepare('UPDATE players SET board = ? WHERE id = ? AND room_code = ?')
+      
+      for (const p of players) {
+        const newBoard = generatePlayerBoard(newDeck)
+        updateBoardStmt.run(JSON.stringify(newBoard), p.id, roomCode)
+      }
+    })()
 
     return this.getRoom(roomCode)
   }

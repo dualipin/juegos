@@ -21,13 +21,13 @@ export async function obtenerSalas(req, res) {
 
 export async function crearSala(req, res) {
   try {
-    const { playerName } = req.body
+    const { playerName, playerId: providedPlayerId } = req.body
 
     if (!playerName) {
       return res.status(400).json({ error: 'El nombre del jugador es requerido' })
     }
 
-    const playerId = uuidv4()
+    const playerId = providedPlayerId || uuidv4()
     const roomCode = generateRoomCode()
 
     loteriaService.createRoom(roomCode, playerId, playerName)
@@ -54,13 +54,13 @@ export async function crearSala(req, res) {
 
 export async function unirseSala(req, res) {
   try {
-    const { roomCode, playerName } = req.body
+    const { roomCode, playerName, playerId: providedPlayerId } = req.body
 
     if (!roomCode || !playerName) {
       return res.status(400).json({ error: 'Código de sala y nombre del jugador son requeridos' })
     }
 
-    const playerId = uuidv4()
+    const playerId = providedPlayerId || uuidv4()
     const room = loteriaService.joinRoom(roomCode, playerId, playerName)
     const player = room.players.find((p) => p.id === playerId)
 

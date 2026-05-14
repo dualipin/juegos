@@ -17,9 +17,9 @@ export const roomServices = () => {
     }
   }
 
-  const createRoom = async (playerName: string) => {
+  const createRoom = async (playerName: string, playerId?: string) => {
     try {
-      const response = await api.post<any>(`${baseUrl}/rooms`, { playerName })
+      const response = await api.post<any>(`${baseUrl}/rooms`, { playerName, playerId })
       if (response.status === 201) {
         return response.data
       } else {
@@ -31,11 +31,12 @@ export const roomServices = () => {
     }
   }
 
-  const joinRoom = async (roomCode: string, playerName: string) => {
+  const joinRoom = async (roomCode: string, playerName: string, playerId?: string) => {
     try {
       const response = await api.post<any>(`${baseUrl}/rooms/join`, {
         roomCode,
         playerName,
+        playerId,
       })
       if (response.status === 200) {
         return response.data

@@ -7,9 +7,18 @@
           <h1 class="font-display text-4xl font-black text-error">LOTERÍA</h1>
           <p class="text-sm text-base-content/60">
             Sala: <span class="font-mono font-bold text-error">{{ store.roomCode }}</span>
+            <span v-if="store.isHost" class="ml-2 badge badge-outline badge-sm">Eres el anfitrión</span>
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <button
+            v-if="store.isHost"
+            @click="handleResetRoom"
+            class="btn btn-sm btn-outline btn-warning"
+            title="Reiniciar sala (todos los jugadores recibirán un nuevo cartón)"
+          >
+            Reiniciar sala
+          </button>
           <span v-if="!store.connected" class="badge badge-warning">
             <span class="loading loading-spinner loading-sm"></span>
             Reconectando...
@@ -228,11 +237,15 @@ function handleWebSocketMessage(data: any) {
         store.updatePlayers(data.players)
       }
       if (data.drawnCards) {
+        // Limpiar y actualizar cartas
+        store.drawnElements = []
         data.drawnCards.forEach((card: string) => {
-          if (!store.drawnElements.includes(card)) {
-            store.drawCard(card)
-          }
+          store.drawCard(card)
         })
+      }
+      if (data.winner) {
+        store.setWinner(data.winner)
+        toast.show(`¡El juego ha terminado! Ganador: ${data.winner}`, 'info')
       }
       break
     }
@@ -242,6 +255,17 @@ function handleWebSocketMessage(data: any) {
       store.drawCard(card)
       // Reproducir el nombre de la carta en voz
       speakCard(card)
+      break
+    }
+
+    case 'roomReset': {
+      store.handleRoomReset(data)
+      toast.show('¡La sala ha sido reiniciada! Todos tienen cartones nuevos.', 'success')
+      // Pedir al servidor mi nuevo cartón (podemos forzar una petición o el server puede enviarlo en roomReset)
+      // En este caso, el server actualiza la DB, así que podemos simplemente volver a unirnos o el server podría enviar el cartón individualmente.
+      // Mejor: el server envía 'roomReset' y luego cada uno puede pedir su estado o el server hace push.
+      // Para simplificar, haremos que el componente pida su cartón actual si detecta un reset.
+      refreshPlayerData()
       break
     }
 
@@ -270,6 +294,7 @@ function handleWebSocketMessage(data: any) {
 
     case 'winner': {
       store.setWinner(data.winnerName)
+      toast.show(`¡BINGO! ${data.winnerName} ha ganado la lotería`, 'success')
       break
     }
 
@@ -285,6 +310,16 @@ function handleWebSocketMessage(data: any) {
   }
 }
 
+async function refreshPlayerData() {
+  try {
+    const roomService = roomServices()
+    const response = await roomService.joinRoom(store.roomCode, store.playerName, store.playerId)
+    store.updateCard(response.card)
+  } catch (err) {
+    console.error('Error refreshing player data:', err)
+  }
+}
+
 function handleDraw() {
   isDrawing.value = true
   sendMessage({ action: 'draw' })
@@ -293,13 +328,25 @@ function handleDraw() {
   }, 500)
 }
 
+function handleResetRoom() {
+  if (confirm('¿Estás seguro de reiniciar la sala? Todos los jugadores recibirán un cartón nuevo.')) {
+    sendMessage({ action: 'resetRoom' })
+  }
+}
+
 function declareBingo() {
   sendMessage({ action: 'bingo' })
 }
 
 function handleNewGame() {
-  store.resetGame()
-  router.push({ name: 'games.lottery' })
+  // En lugar de salir, el host puede simplemente reiniciar si quiere seguir en la misma sala
+  if (store.isHost) {
+    handleResetRoom()
+    store.setWinner(null)
+  } else {
+    store.resetGame()
+    router.push({ name: 'games.lottery' })
+  }
 }
 
 function handleLeaveRoom() {

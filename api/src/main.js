@@ -198,6 +198,19 @@ function handleLotteryMessage(message, roomCode, playerId, ws) {
         break
       }
 
+      case 'resetRoom': {
+        const updatedRoom = loteriaService.resetRoom(roomCode, playerId)
+        broadcastToRoom(roomCode, null, {
+          type: 'roomReset',
+          roomCode: updatedRoom.code,
+          gameStarted: updatedRoom.gameStarted,
+          players: updatedRoom.players.map(p => ({ id: p.id, name: p.name, connected: p.connected })),
+          drawnCards: updatedRoom.drawnCards,
+          winner: updatedRoom.winner
+        })
+        break
+      }
+
       default:
         break
     }
