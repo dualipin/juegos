@@ -186,4 +186,8 @@ export const useGameStore = defineStore('lotteryGame', () => {
     updateCard,
     resetGame,
   }
+}, {
+  persist: {
+    pick: ['playerName']
+  }
 })

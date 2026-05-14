@@ -26,7 +26,7 @@
             <span class="label-text text-xs tracking-widest uppercase font-semibold opacity-60">Nombre del
               jugador</span>
           </label>
-          <input v-model="playerName" type="text" placeholder="Ej: María Félix"
+          <input ref="nameInput" v-model="playerName" type="text" placeholder="Ej: María Félix"
             class="input input-bordered w-full font-serif text-base" @keyup.enter="handleAction" />
         </div>
 
@@ -96,12 +96,7 @@
       </div>
 
       <ul v-else class="space-y-2">
-        <li v-for="room in rooms" :key="room.code" @click="
-          () => {
-            roomCode = room.code
-            action = 'join'
-          }
-        "
+        <li v-for="room in rooms" :key="room.code" @click="autoJoinRoom(room.code)"
           class="flex items-center justify-between px-4 py-3 rounded-xl border border-base-200 bg-base-100 cursor-pointer hover:border-error hover:bg-base-200 transition-all group">
           <div class="flex items-center gap-3">
             <span class="font-display text-lg font-bold tracking-widest text-error">
@@ -125,6 +120,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
 import { useToastStore } from '@/stores'
@@ -146,12 +142,13 @@ const half = Math.ceil(images.length / 2)
 const firstHalf = computed(() => images.slice(0, half))
 const secondHalf = computed(() => images.slice(half))
 
-const playerName = ref('')
+const { playerName } = storeToRefs(store)
 const roomCode = ref('')
 const action = ref<'create' | 'join' | null>(null)
 const error = ref('')
 const isLoading = ref(false)
 const rooms = ref<any[]>([])
+const nameInput = ref<HTMLInputElement | null>(null)
 
 const canSubmit = computed(() => {
   if (!playerName.value || !action.value) return false
@@ -218,6 +215,19 @@ async function handleAction() {
   } finally {
     isLoading.value = false
   }
+}
+
+async function autoJoinRoom(code: string) {
+  roomCode.value = code
+  action.value = 'join'
+
+  if (!playerName.value) {
+    nameInput.value?.focus()
+    toast.show('Por favor, ingresa tu nombre para unirte', 'info')
+    return
+  }
+
+  await handleAction()
 }
 </script>
 
