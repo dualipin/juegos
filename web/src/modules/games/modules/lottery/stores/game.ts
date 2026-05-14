@@ -25,7 +25,6 @@ export const useGameStore = defineStore('lotteryGame', () => {
   const playerId = ref('')
   const playerName = ref('')
   const creatorId = ref('')
-  const isHost = ref(false)
   const card = ref<string[]>([])
   const drawnElements = ref<string[]>([])
   const players = ref<Player[]>([])
@@ -34,7 +33,8 @@ export const useGameStore = defineStore('lotteryGame', () => {
   const gameStarted = ref(false)
 
   // Computed properties
-  const isCardComplete = computed(() => card.value.every((el) => drawnElements.value.includes(el)))
+  const isHost = computed(() => !!playerId.value && !!creatorId.value && playerId.value === creatorId.value)
+  const isCardComplete = computed(() => card.value.length > 0 && card.value.every((el) => drawnElements.value.includes(el)))
 
   const playersList = computed(() => 
     players.value.map((p) => ({
@@ -49,7 +49,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
     playerId: string
     playerName: string
     creatorId?: string
-    isHost: boolean
+    isHost?: boolean
     card: string[]
     players?: Player[]
     drawnCards?: string[]
@@ -58,13 +58,12 @@ export const useGameStore = defineStore('lotteryGame', () => {
     playerId.value = data.playerId
     playerName.value = data.playerName
     creatorId.value = data.creatorId || ''
-    isHost.value = data.isHost
     card.value = data.card || []
     players.value = data.players || [{ id: data.playerId, name: data.playerName }]
     drawnElements.value = data.drawnCards || []
     connected.value = true
 
-    // Guardar sesión en localStorage para reconexión
+    // Guardar sesión en localStorage para reconexión (redundante con pinia-persist pero útil como respaldo)
     localStorage.setItem(`lottery_session_${data.roomCode}`, JSON.stringify({
       playerId: data.playerId,
       playerName: data.playerName,
@@ -113,7 +112,7 @@ export const useGameStore = defineStore('lotteryGame', () => {
   }
 
   function setIsHost(state: boolean) {
-    isHost.value = state
+    // Redundante, el computed se encarga
   }
 
   function setGameStarted(state: boolean) {
@@ -188,6 +187,6 @@ export const useGameStore = defineStore('lotteryGame', () => {
   }
 }, {
   persist: {
-    pick: ['playerName']
+    pick: ['playerName', 'roomCode', 'playerId', 'creatorId', 'card', 'drawnElements', 'gameStarted', 'winner', 'players']
   }
 })

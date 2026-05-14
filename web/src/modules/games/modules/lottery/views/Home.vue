@@ -157,6 +157,11 @@ const canSubmit = computed(() => {
 })
 
 onMounted(async () => {
+  // Si ya tenemos una sesión activa, redirigir al juego
+  if (store.roomCode && store.playerId) {
+    router.push({ name: 'games.lottery.game' })
+    return
+  }
   await loadRooms()
 })
 

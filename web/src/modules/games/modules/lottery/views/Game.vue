@@ -217,6 +217,9 @@ onMounted(() => {
   // Conectar WebSocket
   connectWebSocket(store.roomCode, store.playerId, handleWebSocketMessage)
 
+  // Refrescar datos del servidor por si acaso (reconexión)
+  refreshPlayerData()
+
   // Limpiar voces de síntesis al cargar
   window.speechSynthesis.getVoices()
 })
@@ -231,7 +234,6 @@ function handleWebSocketMessage(data: any) {
       store.setConnected(true)
       if (data.creatorId) {
         store.setCreatorId(data.creatorId)
-        store.setIsHost(data.creatorId === store.playerId)
       }
       if (data.players) {
         store.updatePlayers(data.players)
