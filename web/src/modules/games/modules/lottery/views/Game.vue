@@ -115,6 +115,7 @@
           ref="boardCardRef" 
           @mousemove="onBoardMouseMove" 
           @mouseleave="onBoardMouseLeave"
+          @click="requestOrientationPermission"
         >
           <div class="card-body">
             <h3 class="card-title text-base-content">Mi cartón</h3>
@@ -335,6 +336,51 @@ function onBoardMouseLeave() {
   }
 }
 
+function handleDeviceOrientation(e: DeviceOrientationEvent) {
+  if (!boardCardRef.value || !xTo || !yTo) return
+  let { gamma, beta } = e
+  if (gamma === null || beta === null) return
+  
+  // Limitar los valores para que el efecto no sea exagerado
+  gamma = Math.max(-45, Math.min(45, gamma))
+  // Asumimos que 45 grados de beta es el centro de reposo
+  beta = Math.max(0, Math.min(90, beta)) - 45
+  
+  // Mapear a un rango para el tilt
+  const rotateY = (gamma / 45) * 15
+  const rotateX = (beta / 45) * -15
+  
+  xTo(rotateY)
+  yTo(rotateX)
+}
+
+async function requestOrientationPermission() {
+  if (!window.isSecureContext) {
+    toast.show('El giroscopio requiere HTTPS o localhost para funcionar en móviles.', 'warning')
+    return
+  }
+
+  if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+    try {
+      const permissionState = await (DeviceOrientationEvent as any).requestPermission()
+      if (permissionState === 'granted') {
+        window.addEventListener('deviceorientation', handleDeviceOrientation, true)
+        toast.show('Giroscopio activado', 'success')
+      } else {
+        toast.show('Permiso de giroscopio denegado', 'error')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.show('Error al activar giroscopio', 'error')
+    }
+  } else if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', handleDeviceOrientation, true)
+    toast.show('Giroscopio vinculado', 'info')
+  } else {
+    toast.show('Tu dispositivo no soporta el giroscopio', 'error')
+  }
+}
+
 function flashScreen() {
   const flashOverlay = document.createElement('div')
   flashOverlay.style.position = 'fixed'
@@ -447,10 +493,16 @@ onMounted(() => {
     yTo = gsap.quickTo(boardCardRef.value, "rotationX", { ease: "power3", duration: 0.5 })
     gsap.set(boardCardRef.value, { transformPerspective: 1000, transformOrigin: "center center" })
   }
+
+  // Activar giroscopio por defecto si no requiere permisos especiales (Android)
+  if (window.isSecureContext && window.DeviceOrientationEvent && typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
+    window.addEventListener('deviceorientation', handleDeviceOrientation, true)
+  }
 })
 
 onBeforeUnmount(() => {
   disconnectWebSocket()
+  window.removeEventListener('deviceorientation', handleDeviceOrientation)
 })
 
 function handleWebSocketMessage(data: any) {
