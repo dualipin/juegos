@@ -115,9 +115,10 @@ class LoteriaService {
       return this.getRoom(roomCode)
     }
 
-    if (room.gameStarted) {
-      throw new Error('El juego ya ha iniciado')
-    }
+    /* Permitir unirse incluso si el juego inició */
+    // if (room.gameStarted) {
+    //   throw new Error('El juego ya ha iniciado')
+    // }
 
     const deck = parseCardList(room.deck)
     const board = generatePlayerBoard(deck)
