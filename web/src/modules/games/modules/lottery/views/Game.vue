@@ -341,14 +341,14 @@ function handleDeviceOrientation(e: DeviceOrientationEvent) {
   let { gamma, beta } = e
   if (gamma === null || beta === null) return
   
-  // Limitar los valores para que el efecto no sea exagerado
-  gamma = Math.max(-45, Math.min(45, gamma))
+  // Limitar los valores para un rango de movimiento más amplio
+  gamma = Math.max(-60, Math.min(60, gamma))
   // Asumimos que 45 grados de beta es el centro de reposo
   beta = Math.max(0, Math.min(90, beta)) - 45
   
-  // Mapear a un rango para el tilt
-  const rotateY = (gamma / 45) * 15
-  const rotateX = (beta / 45) * -15
+  // Mapear a un rango de rotación más evidente (hasta 25 grados)
+  const rotateY = (gamma / 60) * 25
+  const rotateX = (beta / 45) * -25
   
   xTo(rotateY)
   yTo(rotateX)
@@ -364,20 +364,15 @@ async function requestOrientationPermission() {
     try {
       const permissionState = await (DeviceOrientationEvent as any).requestPermission()
       if (permissionState === 'granted') {
-        window.addEventListener('deviceorientation', handleDeviceOrientation, true)
-        toast.show('Giroscopio activado', 'success')
+        window.addEventListener('deviceorientation', handleDeviceOrientation)
       } else {
         toast.show('Permiso de giroscopio denegado', 'error')
       }
     } catch (error) {
       console.error('Error:', error)
-      toast.show('Error al activar giroscopio', 'error')
     }
   } else if (window.DeviceOrientationEvent) {
-    window.addEventListener('deviceorientation', handleDeviceOrientation, true)
-    toast.show('Giroscopio vinculado', 'info')
-  } else {
-    toast.show('Tu dispositivo no soporta el giroscopio', 'error')
+    window.addEventListener('deviceorientation', handleDeviceOrientation)
   }
 }
 
@@ -496,7 +491,7 @@ onMounted(() => {
 
   // Activar giroscopio por defecto si no requiere permisos especiales (Android)
   if (window.isSecureContext && window.DeviceOrientationEvent && typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
-    window.addEventListener('deviceorientation', handleDeviceOrientation, true)
+    window.addEventListener('deviceorientation', handleDeviceOrientation)
   }
 })
 
