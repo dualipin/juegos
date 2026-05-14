@@ -84,7 +84,12 @@
             <div v-if="store.drawnElements.length === 0" class="text-center py-8 text-base-content/40">
               <p class="text-lg">Esperando cartas...</p>
             </div>
-            <div v-else class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+            <transition-group 
+              v-else 
+              tag="div" 
+              class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"
+              @enter="onDrawnCardEnter"
+            >
               <div
                 v-for="card in store.drawnElements"
                 :key="card"
@@ -97,7 +102,7 @@
                   loading="lazy"
                 />
               </div>
-            </div>
+            </transition-group>
           </div>
         </div>
       </div>
@@ -105,7 +110,12 @@
       <!-- Panel derecho: Mi cartón y jugadores -->
       <div class="space-y-6 order-2 lg:order-3">
         <!-- Mi cartón (4x4) -->
-        <div class="card bg-base-100 shadow-lg border-2 border-success">
+        <div 
+          class="card bg-base-100 shadow-lg border-2 border-success" 
+          ref="boardCardRef" 
+          @mousemove="onBoardMouseMove" 
+          @mouseleave="onBoardMouseLeave"
+        >
           <div class="card-body">
             <h3 class="card-title text-base-content">Mi cartón</h3>
             <div class="grid grid-cols-4 gap-1 mt-4">
@@ -127,12 +137,14 @@
                   loading="lazy"
                 />
                 <!-- Frijolito cuando la carta está marcada -->
-                <div
-                  v-if="store.drawnElements.includes(card)"
-                  class="absolute inset-0 flex items-center justify-center text-4xl"
-                >
-                  <span class="text-2xl sm:text-5xl brightness-50">🫘</span>
-                </div>
+                <transition @enter="onBeanEnter">
+                  <div
+                    v-if="store.drawnElements.includes(card)"
+                    class="absolute inset-0 flex items-center justify-center text-4xl"
+                  >
+                    <span class="text-2xl sm:text-5xl brightness-50">🫘</span>
+                  </div>
+                </transition>
               </div>
             </div>
             <div
@@ -229,11 +241,20 @@
         />
       </div>
     </div>
+
+    <!-- Subtítulo animado -->
+    <div v-if="activeSubtitle" class="fixed bottom-10 left-0 w-full flex justify-center z-[110] pointer-events-none">
+      <div class="bg-black/70 text-white px-6 py-3 rounded-full text-2xl md:text-4xl font-display uppercase tracking-widest backdrop-blur-sm">
+        <span v-for="(char, index) in activeSubtitle" :key="index" class="subtitle-char inline-block whitespace-pre">
+          {{ char }}
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
 import { useToastStore } from '@/stores'
@@ -256,6 +277,63 @@ const showRouletteOverlay = ref(false)
 const rouletteCardImage = ref('')
 const isAnimatingCard = ref(false)
 const animatedCardRef = ref<HTMLElement | null>(null)
+
+const boardCardRef = ref<HTMLElement | null>(null)
+let xTo: gsap.QuickToFunc | null = null
+let yTo: gsap.QuickToFunc | null = null
+
+const activeSubtitle = ref('')
+
+function showSubtitle(text: string) {
+  activeSubtitle.value = text
+  nextTick(() => {
+    gsap.fromTo('.subtitle-char', 
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, stagger: 0.05, duration: 0.3, ease: 'back.out(2)' }
+    )
+  })
+  
+  setTimeout(() => {
+    gsap.to('.subtitle-char', { opacity: 0, y: -20, stagger: 0.03, duration: 0.3, onComplete: () => { activeSubtitle.value = '' } })
+  }, 3000)
+}
+
+function onBeanEnter(el: Element, done: () => void) {
+  gsap.fromTo(el, 
+    { y: -100, opacity: 0, scale: 0.5 }, 
+    { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "bounce.out", onComplete: done }
+  )
+}
+
+function onDrawnCardEnter(el: Element, done: () => void) {
+  gsap.fromTo(el,
+    { scale: 0, rotation: gsap.utils.random(-8, 8) },
+    { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(1.7)", onComplete: done }
+  )
+}
+
+function onBoardMouseMove(e: MouseEvent) {
+  if (!boardCardRef.value || !xTo || !yTo) return
+  const rect = boardCardRef.value.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+  const centerX = rect.width / 2
+  const centerY = rect.height / 2
+  
+  // Rotate between -10 and 10 degrees
+  const rotateX = ((y - centerY) / centerY) * -10
+  const rotateY = ((x - centerX) / centerX) * 10
+  
+  xTo(rotateY)
+  yTo(rotateX)
+}
+
+function onBoardMouseLeave() {
+  if (xTo && yTo) {
+    xTo(0)
+    yTo(0)
+  }
+}
 
 function flashScreen() {
   const flashOverlay = document.createElement('div')
@@ -306,6 +384,7 @@ async function playRouletteAndReveal(finalCard: string) {
   
   // Hablar carta
   speakCard(finalCard)
+  showSubtitle(cardLabel(finalCard))
   
   // Esperar un momento para que se vea
   await new Promise(r => setTimeout(r, 1200))
@@ -362,6 +441,12 @@ onMounted(() => {
 
   // Limpiar voces de síntesis al cargar
   window.speechSynthesis.getVoices()
+
+  if (boardCardRef.value) {
+    xTo = gsap.quickTo(boardCardRef.value, "rotationY", { ease: "power3", duration: 0.5 })
+    yTo = gsap.quickTo(boardCardRef.value, "rotationX", { ease: "power3", duration: 0.5 })
+    gsap.set(boardCardRef.value, { transformPerspective: 1000, transformOrigin: "center center" })
+  }
 })
 
 onBeforeUnmount(() => {
