@@ -176,12 +176,24 @@
         <div class="card-body text-center">
           <div class="text-6xl mb-4">🎉</div>
           <h2 class="card-title justify-center text-2xl text-success mb-2">
-            ¡{{ store.winner }} ganó!
+            <template v-if="store.winner === store.playerName">
+              🏆 ¡Felicidades, ganaste! 🏆
+            </template>
+            <template v-else>
+              ¡{{ store.winner }} ganó!
+            </template>
           </h2>
           
           <div class="text-base-content/70 mb-6">
+            <!-- Mensaje especial si yo gané -->
+            <div v-if="store.winner === store.playerName" class="mb-4 py-2">
+              <p class="text-2xl font-black text-primary animate-pulse mb-1">¡ERES EL CAMPEÓN!</p>
+              <p class="text-sm italic">Has completado tu cartón antes que nadie. ¡Excelente jugada!</p>
+            </div>
+
+            <!-- Instrucciones según rol -->
             <p v-if="store.isHost" class="font-medium">
-              ¡Felicidades! Como anfitrión, puedes iniciar una nueva partida para todos.
+              Como anfitrión, puedes iniciar una nueva partida para todos.
             </p>
             <p v-else>
               Espera a que el anfitrión reinicie la partida o puedes salir si lo prefieres.
