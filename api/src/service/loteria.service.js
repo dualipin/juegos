@@ -388,6 +388,19 @@ class LoteriaService {
       `)
       .run(maxMinutes)
   }
+
+  /**
+   * Eliminar una sala
+   */
+  deleteRoom(roomCode, playerId) {
+    const room = this.getRoom(roomCode)
+
+    if (playerId !== room.creatorId) {
+      throw new Error('Solo el anfitrión puede eliminar la sala')
+    }
+
+    this.db.prepare('DELETE FROM rooms WHERE code = ?').run(roomCode)
+  }
 }
 
 export default LoteriaService

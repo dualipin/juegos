@@ -142,10 +142,8 @@ export const useGameStore = defineStore('lotteryGame', () => {
       localStorage.removeItem(`lottery_session_${roomCode.value}`)
     }
     roomCode.value = ''
-    playerId.value = ''
-    playerName.value = ''
+    // Preservamos playerName y playerId para que no tenga que reingresar sus datos
     creatorId.value = ''
-    isHost.value = false
     card.value = []
     drawnElements.value = []
     players.value = []
@@ -187,6 +185,6 @@ export const useGameStore = defineStore('lotteryGame', () => {
   }
 }, {
   persist: {
-    pick: ['playerName', 'roomCode', 'playerId', 'creatorId', 'card', 'drawnElements', 'gameStarted', 'winner', 'players']
+    paths: ['playerName', 'roomCode', 'playerId', 'creatorId', 'card', 'drawnElements', 'gameStarted', 'winner', 'players']
   }
 })

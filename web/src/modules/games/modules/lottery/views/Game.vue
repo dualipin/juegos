@@ -4,7 +4,7 @@
     <header class="mb-10">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 class="font-display text-4xl font-black text-error">LOTERÍA</h1>
+          <h1 class="font-display text-4xl font-black">LOTERÍA</h1>
           <p class="text-sm text-base-content/60">
             Sala: <span class="font-mono font-bold text-error">{{ store.roomCode }}</span>
             <span v-if="store.isHost" class="ml-2 badge badge-outline badge-sm">Eres el anfitrión</span>
@@ -18,6 +18,14 @@
             title="Reiniciar sala (todos los jugadores recibirán un nuevo cartón)"
           >
             Reiniciar sala
+          </button>
+          <button
+            v-if="store.isHost"
+            @click="handleDeleteRoom"
+            class="btn btn-sm btn-outline btn-error"
+            title="Eliminar sala permanentemente"
+          >
+            Eliminar sala
           </button>
           <span v-if="!store.connected" class="badge badge-warning">
             <span class="loading loading-spinner loading-sm"></span>
@@ -47,10 +55,9 @@
     </div>
 
     <div class="grid lg:grid-cols-3 gap-6">
-      <!-- Panel principal: Cartas lanzadas y controles -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Botón lanzar (solo host) -->
-        <div v-if="store.isHost" class="card bg-base-100 shadow-lg border border-base-200">
+      <!-- Botón lanzar (solo host) -->
+      <div v-if="store.isHost" class="lg:col-span-2 order-1">
+        <div class="card bg-base-100 shadow-lg border border-base-200">
           <div class="card-body">
             <h3 class="card-title text-base-content">Eres el anfitrión</h3>
             <p class="text-sm text-base-content/60 mb-4">
@@ -67,8 +74,10 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Cartas lanzadas -->
+      <!-- Panel principal: Cartas lanzadas -->
+      <div class="lg:col-span-2 space-y-6 order-3 lg:order-2">
         <div class="card bg-base-100 shadow-lg border border-base-200">
           <div class="card-body">
             <h3 class="card-title text-base-content mb-4">Cartas lanzadas</h3>
@@ -79,7 +88,7 @@
               <div
                 v-for="card in store.drawnElements"
                 :key="card"
-                class="flex items-center justify-center aspect-3/4.5 overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border-2 border-error"
+                class="flex items-center justify-center aspect-3/4.5 overflow-hidden rounded-lg bg-linear-to-br from-error/20 to-error/10 border"
               >
                 <img
                   :src="cardImage(card)"
@@ -94,7 +103,7 @@
       </div>
 
       <!-- Panel derecho: Mi cartón y jugadores -->
-      <div class="space-y-6">
+      <div class="space-y-6 order-2 lg:order-3">
         <!-- Mi cartón (4x4) -->
         <div class="card bg-base-100 shadow-lg border-2 border-success">
           <div class="card-body">
@@ -106,7 +115,7 @@
                 :class="[
                   'flex items-center justify-center aspect-3/4.5 overflow-hidden rounded transition-all duration-300 relative',
                   store.drawnElements.includes(card)
-                    ? 'bg-success text-white shadow-lg scale-110'
+                    ? 'border border-primary'
                     : 'bg-base-200 text-base-content border-2 border-base-300',
                 ]"
               >
@@ -114,7 +123,7 @@
                   :src="cardImage(card)"
                   :alt="cardLabel(card)"
                   class="h-full w-full object-cover"
-                  :class="store.drawnElements.includes(card) ? 'opacity-100' : 'opacity-50 hover:opacity-75'"
+                  :class="store.drawnElements.includes(card) ? 'opacity-100' : 'opacity-25 hover:opacity-50'"
                   loading="lazy"
                 />
                 <!-- Frijolito cuando la carta está marcada -->
@@ -122,7 +131,7 @@
                   v-if="store.drawnElements.includes(card)"
                   class="absolute inset-0 flex items-center justify-center text-4xl"
                 >
-                  <span class="text-5xl brightness-50">🫘</span>
+                  <span class="text-2xl sm:text-5xl brightness-50">🫘</span>
                 </div>
               </div>
             </div>
@@ -192,6 +201,7 @@ import { useToastStore } from '@/stores'
 import { connectWebSocket, sendMessage, disconnectWebSocket } from '../services/socket'
 import { speakCard } from '../utils/textToSpeech'
 import { getLotteryCard, lotteryCards } from '../data/cards'
+import { roomServices } from '../services/room-services'
 
 const router = useRouter()
 const store = useGameStore()
@@ -310,6 +320,14 @@ function handleWebSocketMessage(data: any) {
       toast.show(data.message, 'error')
       break
     }
+
+    case 'roomDeleted': {
+      toast.show('La sala ha sido eliminada por el anfitrión', 'warning')
+      store.resetGame()
+      disconnectWebSocket()
+      router.push({ name: 'games.lottery' })
+      break
+    }
   }
 }
 
@@ -334,6 +352,12 @@ function handleDraw() {
 function handleResetRoom() {
   if (confirm('¿Estás seguro de reiniciar la sala? Todos los jugadores recibirán un cartón nuevo.')) {
     sendMessage({ action: 'resetRoom' })
+  }
+}
+
+function handleDeleteRoom() {
+  if (confirm('¿EstÁS SEGURO? Esta acción eliminará la sala permanentemente para todos los jugadores.')) {
+    sendMessage({ action: 'deleteRoom' })
   }
 }
 

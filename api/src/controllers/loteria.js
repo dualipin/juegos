@@ -102,3 +102,20 @@ export async function obtenerSala(req, res) {
     res.status(404).json({ error: error.message })
   }
 }
+
+export async function eliminarSala(req, res) {
+  try {
+    const { roomCode } = req.params
+    const { playerId } = req.body
+
+    if (!roomCode || !playerId) {
+      return res.status(400).json({ error: 'Código de sala y ID de jugador son requeridos' })
+    }
+
+    loteriaService.deleteRoom(roomCode, playerId)
+
+    res.json({ message: 'Sala eliminada correctamente' })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+}

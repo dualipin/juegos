@@ -182,7 +182,7 @@ async function handleAction() {
 
   try {
     const savedSession = roomCode.value ? store.getSavedSession(roomCode.value) : null
-    const playerIdToUse = savedSession?.playerId
+    const playerIdToUse = savedSession?.playerId || store.playerId
 
     if (action.value === 'create') {
       const response = await roomService.createRoom(playerName.value, playerIdToUse)

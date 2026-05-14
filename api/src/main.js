@@ -221,6 +221,15 @@ function handleLotteryMessage(message, roomCode, playerId, ws) {
         });
         break;
       }
+      
+      case "deleteRoom": {
+        loteriaService.deleteRoom(roomCode, playerId);
+        broadcastToRoom(roomCode, null, {
+          type: "roomDeleted",
+          roomCode,
+        });
+        break;
+      }
 
       default:
         break;

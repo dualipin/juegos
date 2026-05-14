@@ -63,10 +63,27 @@ export const roomServices = () => {
     }
   }
 
+  const deleteRoom = async (roomCode: string, playerId: string) => {
+    try {
+      const response = await api.delete<any>(`${baseUrl}/rooms/${roomCode}`, {
+        data: { playerId },
+      })
+      if (response.status === 200) {
+        return response.data
+      } else {
+        throw new Error(`Failed to delete room: ${response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Error deleting room:', error)
+      throw error
+    }
+  }
+
   return {
     getAllRooms,
     createRoom,
     joinRoom,
     getRoom,
+    deleteRoom,
   }
 }
