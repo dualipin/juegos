@@ -65,7 +65,7 @@
             </p>
             <button
               @click="handleDraw"
-              :disabled="!store.connected || store.drawnElements.length >= maxCards || isDrawing"
+              :disabled="!store.connected || store.drawnElements.length >= maxCards || isDrawing || isAnimatingCard"
               class="btn btn-lg btn-primary gap-2 w-full font-display"
             >
               <span v-if="isDrawing" class="loading loading-spinner"></span>
@@ -215,6 +215,20 @@
         </div>
       </div>
     </div>
+
+    <!-- Overlay de ruleta / carta animada -->
+    <div v-if="showRouletteOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 pointer-events-none">
+      <div 
+        ref="animatedCardRef"
+        class="aspect-3/4.5 w-64 md:w-80 rounded-2xl overflow-hidden shadow-2xl border-4 border-primary"
+        style="transform-style: preserve-3d; perspective: 1000px;"
+      >
+        <img
+          :src="rouletteCardImage"
+          class="w-full h-full object-cover"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -227,12 +241,102 @@ import { connectWebSocket, sendMessage, disconnectWebSocket } from '../services/
 import { speakCard } from '../utils/textToSpeech'
 import { getLotteryCard, lotteryCards } from '../data/cards'
 import { roomServices } from '../services/room-services'
+import JSConfetti from 'js-confetti'
+import gsap from 'gsap'
 
 const router = useRouter()
 const store = useGameStore()
 const toast = useToastStore()
 const isDrawing = ref(false)
 const maxCards = lotteryCards.length
+
+const jsConfetti = new JSConfetti()
+
+const showRouletteOverlay = ref(false)
+const rouletteCardImage = ref('')
+const isAnimatingCard = ref(false)
+const animatedCardRef = ref<HTMLElement | null>(null)
+
+function flashScreen() {
+  const flashOverlay = document.createElement('div')
+  flashOverlay.style.position = 'fixed'
+  flashOverlay.style.top = '0'
+  flashOverlay.style.left = '0'
+  flashOverlay.style.width = '100vw'
+  flashOverlay.style.height = '100vh'
+  flashOverlay.style.backgroundColor = 'rgba(0,255,0,0.15)'
+  flashOverlay.style.pointerEvents = 'none'
+  flashOverlay.style.zIndex = '9999'
+  document.body.appendChild(flashOverlay)
+
+  gsap.fromTo(flashOverlay, 
+    { opacity: 0.4 }, 
+    { 
+      opacity: 0, 
+      duration: 0.4, 
+      onComplete: () => flashOverlay.remove() 
+    }
+  )
+}
+
+async function playRouletteAndReveal(finalCard: string) {
+  isAnimatingCard.value = true
+  showRouletteOverlay.value = true
+  
+  // 1. Efecto Ruleta
+  let duration = 80
+  const randomCards = [...lotteryCards].sort(() => Math.random() - 0.5).slice(0, 5)
+  
+  for (let i = 0; i < randomCards.length; i++) {
+    rouletteCardImage.value = cardImage(randomCards[i].numero.toString())
+    await new Promise(r => setTimeout(r, duration))
+    duration += 40
+  }
+  
+  // 2. Revelar carta final
+  rouletteCardImage.value = cardImage(finalCard)
+  
+  // Flip animation
+  if (animatedCardRef.value) {
+    gsap.fromTo(animatedCardRef.value, 
+      { rotationY: -180, scale: 0.8 }, 
+      { rotationY: 0, scale: 1, duration: 0.6, ease: "back.out(1.5)" }
+    )
+  }
+  
+  // Hablar carta
+  speakCard(finalCard)
+  
+  // Esperar un momento para que se vea
+  await new Promise(r => setTimeout(r, 1200))
+  
+  // 3. Volar a la grilla
+  if (animatedCardRef.value) {
+    await gsap.to(animatedCardRef.value, {
+      y: -200,
+      scale: 0.1,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power2.in"
+    })
+  }
+  
+  // Limpiar overlay
+  showRouletteOverlay.value = false
+  
+  // Actualizar estado (ahora aparece en el cartón y la grilla)
+  store.drawCard(finalCard)
+  
+  // Flash y vibración si la tengo
+  if (store.card.includes(finalCard)) {
+    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200])
+    flashScreen()
+  } else {
+    if ('vibrate' in navigator) navigator.vibrate(100)
+  }
+  
+  isAnimatingCard.value = false
+}
 
 function cardImage(card: string) {
   return getLotteryCard(card)?.image ?? `/loteria/${card}.jpeg`
@@ -290,20 +394,7 @@ function handleWebSocketMessage(data: any) {
 
     case 'cardDrawn': {
       const card = data.card
-      store.drawCard(card)
-      // Reproducir el nombre de la carta en voz
-      speakCard(card)
-
-      // Vibración: simple si se lanza, doble si la tengo
-      if ('vibrate' in navigator) {
-        if (store.card.includes(card)) {
-          // Doble pulso si la tengo en mi cartón
-          navigator.vibrate([200, 100, 200])
-        } else {
-          // Pulso simple si no la tengo
-          navigator.vibrate(100)
-        }
-      }
+      playRouletteAndReveal(card)
       break
     }
 
@@ -344,6 +435,22 @@ function handleWebSocketMessage(data: any) {
     case 'winner': {
       store.setWinner(data.winnerName)
       toast.show(`¡BINGO! ${data.winnerName} ha ganado la lotería`, 'success')
+      
+      jsConfetti.addConfetti({
+        emojis: ['🎴', '🫘', '⭐', '🎉'],
+        emojiSize: 50,
+        confettiNumber: 200,
+      })
+
+      if (data.winnerName === store.playerName) {
+        setTimeout(() => {
+          jsConfetti.addConfetti({
+            emojis: ['🏆', '🥇', '💰', '🎊'],
+            emojiSize: 60,
+            confettiNumber: 150,
+          })
+        }, 800)
+      }
       break
     }
 
