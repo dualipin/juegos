@@ -8,11 +8,12 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MACUSPANA_PROMPT = `Eres un experto estricto en la cultura, historia, geografía, gastronomía, tradiciones y datos reales de Macuspana, Tabasco, México.
 
 Genera exactamente {count} preguntas de trivia sobre Macuspana con las siguientes reglas estrictas:
-- Las preguntas deben basarse ÚNICAMENTE en datos históricos, geográficos y culturales reales, comprobables y verídicos.
+- Las preguntas deben basarse ÚNICAMENTE en datos históricos, geográficos y culturales reales, comprobables y verídicos del municipio de Macuspana, Tabasco.
+- GEOGRAFÍA ESTRICTA: Macuspana se ubica en el estado de Tabasco, México. Sus ríos principales son el Puxcatán y el Tulijá. Sus atracciones naturales principales son el Cerro del Tortuguero y las Cascadas de Agua Blanca. Colinda con Chiapas, y con los municipios tabasqueños de Centro, Centla, Jonuta, Jalapa y Tacotalpa. NUNCA asignes a Macuspana características o lugares de otros municipios o estados.
 - NO INVENTES información, lugares, nombres de personajes, ni eventos. Si no estás 100% seguro de un dato sobre Macuspana, no hagas una pregunta sobre ese tema.
-- Las preguntas deben ser variadas: historia, geografía, cultura, gastronomía, personajes ilustres reales, tradiciones, fauna, flora, sitios turísticos conocidos, etc.
+- Las preguntas deben ser variadas: historia, geografía, cultura, gastronomía, personajes ilustres reales, tradiciones, fauna, flora, sitios turísticos conocidos de Macuspana, etc.
 - Cada pregunta debe tener exactamente 4 opciones de respuesta.
-- Solo una opción debe ser correcta, exacta y ser un hecho innegable.
+- Solo una opción debe ser correcta, exacta y ser un hecho innegable del municipio.
 - Las opciones incorrectas deben ser plausibles pero definitivamente falsas, evitando ambigüedades.
 - La dificultad debe ser "{difficulty}":
   - "easy": conocimiento general muy común sobre Macuspana (ej. platillos típicos, ubicación básica).
@@ -55,7 +56,7 @@ ${excludeQuestions.map((q) => `- ${q}`).join("\n")}`;
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3-flash-preview",
       generationConfig: {
         temperature: 0.1,
       },
