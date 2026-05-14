@@ -171,17 +171,30 @@
     </div>
 
     <!-- Modal de ganador -->
-    <div v-if="store.winner" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="card bg-base-100 shadow-2xl max-w-md w-full mx-4">
+    <div v-if="store.winner" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div class="card bg-base-100 shadow-2xl max-w-md w-full">
         <div class="card-body text-center">
           <div class="text-6xl mb-4">🎉</div>
           <h2 class="card-title justify-center text-2xl text-success mb-2">
             ¡{{ store.winner }} ganó!
           </h2>
-          <p class="text-base-content/60 mb-6">¡Felicidades!</p>
-          <div class="flex gap-3">
-            <button @click="handleNewGame" class="btn btn-success flex-1">
-              Nuevo juego
+          
+          <div class="text-base-content/70 mb-6">
+            <p v-if="store.isHost" class="font-medium">
+              ¡Felicidades! Como anfitrión, puedes iniciar una nueva partida para todos.
+            </p>
+            <p v-else>
+              Espera a que el anfitrión reinicie la partida o puedes salir si lo prefieres.
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button 
+              v-if="store.isHost" 
+              @click="handleNewGame" 
+              class="btn btn-success flex-1"
+            >
+              Jugar de nuevo
             </button>
             <button @click="handleLeaveRoom" class="btn btn-ghost flex-1">
               Salir
